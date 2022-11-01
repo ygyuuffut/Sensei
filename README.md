@@ -13,7 +13,12 @@ A very much scatter-mind driven programming that develops as demands emerges
 	- [Installations](#installations)
 		- [Manual Composition](#manual-composition)
 		- [Alternative Method](#alternative-method)
-	- [Todo Lists](#todo-lists)
+	- [Update History](#update-history)
+		- [Sensei Main](#sensei-main-ui--)
+		- [Sensei Link](#sensei-link---document-network-cl)
+		- [Sensei FD](#sensei-fd---form-distiller-cl)
+		- [Sensei CL](#sensei-cl---common-library-cl)
+		- [Sensei CE](#sensei-cl---common-library-cl)
 
 
 ## Structure Guidances
@@ -39,39 +44,74 @@ There are two methods which this could be setup and become operational on any Wi
 > 1. Use the Release tab get the composed Zip file that contains "*.xlsm" file and start there instead.
 
 
-## Todo Lists
-- [x] [1.0.2] SENSEI LINK - WHICH IS THE INTEGRATION OF SENSEI'S EXTENSIVE ABILITY TO CONTROL ANOTHER WORKBOOK
-  - [x] [1.0.2] MISSING SUPPORT FOR LINKING 114 (STORAGE ACCESS ON SENSEI.DATA)
-- [ ] [ N/A ] SENSEI LINK MASTER 114 - A BASIC DRIVER FOR 114 INFINITE EDITION
-	- [ ] APPEND ABILITY TO LOOKUP SSN BASED ON DODID, CLIP TO CLIPBOARD
-	- [ ] APPEND ABILITY TO FILL DODID OR SSAN FOR LOOKUP PURPOSES
+## Update History
 
-- [ ] [1.0.0] SENSEI Form Distller - DEBT FORM WHICH WILL FUNCTION BASED ON FORM 110 INCLUDED
-	- [ ] [1.0.0] Project Form 110
-		- [ ] [1.0.0] FILL THE 110
-			- [x] [1.0.0] Load DATA
-			- [x] [1.0.0] Write DATA
-			- [x] [1.0.0] trigger Update
-			- [x] [1.0.0] OPTIONAL CHANGE PAGE FUNCTION
-		- [x] [1.0.0] PRINT THE 110
-			- [x] [1.0.0] FILE NAME = LASTNAME.DC.AMOUNT.PDF
-			- [x] [1.0.0] REMEBER STORAGE PATH OPTION (STORAGE ACCESS ON SENSEI.DATA)
-		- [x] [1.0.0] CLEAR THE 110
+### Sensei Main  ![UI](https://img.shields.io/badge/1.4.0-Release-76D754)
+<details><summary>SENSEI 1.4 - Distill Forms</summary>
+<p>
 
-- [ ] [1.3.9] SENSEI Main - Main Body FUNCTION
-	- [x] [1.3.9] Add clean up function
-		- [x] [1.3.9] Why there are free-floating cycle number when it was not attached to IQID?
-	- [x] [1.4.0] Enable Update Inquiry in two ways
-	 	- [x] [1.3.9] By import Update
-		- [x] [1.4.0] By Reminder Date Expiration
-	- [x] [1.4.0] Applied AGPL License
+![](https://img.shields.io/badge/1.4.0-424949?style=flat-square)
+- Dual Method Data Update
+- Data Update by Reminder
+- Applied AGPL v3 License
+</p>
+</details>
 
-- [ ] [0.4.0] SENSEI CL - Reference Manual
-	- [x] [0.4.0] Allow General Eligibility Look-up
-		- [x] [0.4.0] Laydown GUI
-		- [x] [0.4.0] Laydown Dictionary in forward and backward
-		- [x] [0.4.0] Allow basic lookup
-	- [x] [0.4.0] Allow Specific HDP LCTN Lookup
-	- [ ] Allow Update from DJMS TABLE
+<details><summary>SENSEI 1.3 - The Library</summary>
+<p>
 
-- [ ] [ N/A ] SENSEI CE - CODING ENGINE THAT NEED TO SOON REPLACE 114 INFINITE
+![](https://img.shields.io/badge/1.3.9-424949?style=flat-square) 
+- Data Update by Expiration
+- Add clean up function
+- free-floating cycle resolution
+- Handle free-floating data not associated with ID
+- Update Data by import
+</p>
+</details>
+
+### Sensei Link - Document Network ![CL](https://img.shields.io/badge/1.0.2-Release-76D754)
+<details><summary>LINK 1.0 - Bridge</summary>
+<p>
+
+![](https://img.shields.io/badge/1.0.2-424949?style=flat-square)
+- SENSEI LINK - Bridge between files
+  - Link to Modified 114
+  - Link to 3R Report
+</p>
+</details>
+
+### Sensei FD - Form Distiller ![CL](https://img.shields.io/badge/1.0.0-Release-76D754)
+<details><summary>FD 1.0 - Distilling Forms</summary>
+<p>
+
+![](https://img.shields.io/badge/1.0.0-424949?style=flat-square)
+- SENSEI Form Distller introduction
+- Project Form 110
+  - trigger Update
+  - Page Change
+  - Print and Clear the Form
+</p>
+</details>
+
+### Sensei CL - Common Library ![CL](https://img.shields.io/badge/0.4.0-Develop-FF4545)
+<details><summary>CL 0.4 - In Development</summary>
+<p>
+
+![](https://img.shields.io/badge/0.4.0-424949?style=flat-square)
+- Allow General Eligibility Look-up
+- Laydown GUI
+- Laydown Dictionary in forward and backward
+- Allow basic lookup
+- Allow Specific HDP LCTN Lookup
+- Allow Update from DJMS TABLE
+</p>
+</details>
+
+### Sensei CE - Coding Engine ![CL](https://img.shields.io/badge/0.0.1-Un--Started-888895)
+<details><summary>CE 0.0 - Un-started</summary>
+<p>
+
+![](https://img.shields.io/badge/Yet%20to%20Start-424949?style=flat-square)
+- SENSEI CE - CODING ENGINE THAT NEED TO SOON REPLACE 114 INFINITE
+</p>
+</details>
