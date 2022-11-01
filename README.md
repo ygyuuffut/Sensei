@@ -1,7 +1,7 @@
 # SENSEI - A Clustered Applets for Excel
 ![License](https://img.shields.io/badge/License-AGPL%203-BB8FCE?style=flat-square)
 ![Version](https://img.shields.io/badge/Version-1.4.0-76D754?style=flat-square)
-![Version Type](https://img.shields.io/badge/Type-Release-16A085?style=flat-square)
+![Version Type](https://img.shields.io/badge/Type-Release--02-16A085?style=flat-square)
 ![Language](https://img.shields.io/badge/Language-Virtual%20Basic-EB984E?style=flat-square)
 
 A very much scatter-mind driven programming that develops as demands emerges
@@ -14,11 +14,11 @@ A very much scatter-mind driven programming that develops as demands emerges
 		- [Manual Composition](#manual-composition)
 		- [Alternative Method](#alternative-method)
 	- [Update History](#update-history)
-		- [Sensei Main](#sensei-main-ui--)
-		- [Sensei Link](#sensei-link---document-network-cl)
-		- [Sensei FD](#sensei-fd---form-distiller-cl)
-		- [Sensei CL](#sensei-cl---common-library-cl)
-		- [Sensei CE](#sensei-cl---common-library-cl)
+		- [Sensei Main  !UI](#sensei-main--)
+		- [Sensei Link - Document Network !CL](#sensei-link---document-network-)
+		- [Sensei FD - Form Distiller !CL](#sensei-fd---form-distiller-)
+		- [Sensei CL - Common Library !CL](#sensei-cl---common-library-)
+		- [Sensei CE - Coding Engine !CL](#sensei-ce---coding-engine-)
 
 
 ## Structure Guidances
