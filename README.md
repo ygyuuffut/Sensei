@@ -1,6 +1,6 @@
 # SENSEI - A Clustered Applets for Excel
 ![License](https://img.shields.io/badge/License-AGPL%203-BB8FCE)
-![Version](https://img.shields.io/badge/Version-1.4.0-1ABC9C)
+![Version](https://img.shields.io/badge/Version-1.4.0-76D754)
 ![Version Type](https://img.shields.io/badge/Type-Release-16A085)
 ![Language](https://img.shields.io/badge/Language-Virtual%20Basic-EB984E)
 
