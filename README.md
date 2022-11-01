@@ -5,7 +5,7 @@
 ![Language](https://img.shields.io/badge/Language-Virtual%20Basic-EB984E?style=flat-square)
 
 A very much scatter-mind driven programming that develops as demands emerges
-****
+
 ## Table of Contents
 - [SENSEI - A Clustered Applets for Excel](#sensei---a-clustered-applets-for-excel)
 	- [Table of Contents](#table-of-contents)
@@ -24,7 +24,7 @@ A very much scatter-mind driven programming that develops as demands emerges
 
 **Modules** - The Rest of Core functions that are isolated from the actual Operating Body for modular purposes.
 
-****
+
 ## Installations
 There are two methods which this could be setup and become operational on any Windows device, with one significantly easier than the other.
 
@@ -38,7 +38,6 @@ There are two methods which this could be setup and become operational on any Wi
 ### Alternative Method
 > 1. Use the Release tab get the composed Zip file that contains "*.xlsm" file and start there instead.
 
-****
 
 ## Todo Lists
 - [x] [1.0.2] SENSEI LINK - WHICH IS THE INTEGRATION OF SENSEI'S EXTENSIVE ABILITY TO CONTROL ANOTHER WORKBOOK
