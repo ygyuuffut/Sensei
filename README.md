@@ -47,7 +47,7 @@ There are two methods which this could be setup and become operational on any Wi
 
 ## Update History
 
-### Sensei Main  ![UI](https://img.shields.io/badge/1.4.0-Release-76D754)
+### Sensei Main  ![UI](https://img.shields.io/badge/1.4.1-Release-76D754)
 
 <details><summary>SENSEI 1.4 - Distill Forms</summary>
 <p>
@@ -75,7 +75,7 @@ There are two methods which this could be setup and become operational on any Wi
 </p>
 </details>
 
-### Sensei Link - Document Network ![CL](https://img.shields.io/badge/1.0.2-Release-76D754)
+### Sensei Link - Document Network ![CL](https://img.shields.io/badge/1.0.3-Release-76D754)
 <details><summary>LINK 1.0 - Bridge</summary>
 <p>
 
