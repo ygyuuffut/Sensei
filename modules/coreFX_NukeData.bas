@@ -13,20 +13,23 @@ Set cspRng = Union(config.Range("C3:D102"), config.Range("F3:H102"), config.Rang
 
 Set f110aRng = Union(f110a.Range("A5:A17"), f110a.Range("C5:E17"), _
     f110a.Range("J5:J17"), f110a.Range("H5:H17"), f110a.Range("E23"), _
-    f110a.Range("H2"), f110a.Range("M2"))
+    f110a.Range("H2"), f110a.Range("M2"), f110a.Range("N5:N25"))
 Set f110aRng0 = Union(f110a.Range("H5:H17"), f110a.Range("K5:K17"), f110a.Range("J20:J23"), _
     f110a.Range("L20"))
 
 Set f110bRng = Union(f110b.Range("A5:A26"), f110b.Range("C5:E26"), _
-    f110b.Range("J5:J26"), f110b.Range("N5:N26"), f110a.Range("N5:N25"))
+    f110b.Range("J5:J26"), f110b.Range("N5:N26"))
 Set f110bRng0 = Union(f110b.Range("H5:H26"), f110b.Range("K5:K26"))
 
 
 End Sub
 Public Sub nukeData()
 Application.ScreenUpdating = False
+Dim aRow As Long
 
 Initialize
+aRow = acsp.Cells.Find("*", SearchOrder:=xlByRows, searchDirection:=xlPrevious).Row
+acsp.Range("C3:L" & aRow).ClearContents
 cspRng.ClearContents
 f110aRng.ClearContents
 f110aRng0.Value = 0
