@@ -1,7 +1,7 @@
 # SENSEI - A Clustered Applets for Excel
 ![License](https://img.shields.io/badge/License-AGPL%203-BB8FCE?style=flat-square)
-![Version](https://img.shields.io/badge/Version-1.4.0-76D754?style=flat-square)
-![Version Type](https://img.shields.io/badge/Type-Release--02-16A085?style=flat-square)
+![Version](https://img.shields.io/badge/Version-1.4.1-76D754?style=flat-square)
+![Version Type](https://img.shields.io/badge/Type-Release--01-16A085?style=flat-square)
 ![Language](https://img.shields.io/badge/Language-Virtual%20Basic-EB984E?style=flat-square)
 
 A very much scatter-mind driven programming that develops as demands emerges
@@ -42,14 +42,20 @@ There are two methods which this could be setup and become operational on any Wi
 
 ### Alternative Method
 > 1. Use the Release tab get the composed Zip file that contains "*.xlsm" file and start there instead.
+> 2. Then Migrate the Data as needed (if the original is over written, then it is done for)
 
 
 ## Update History
 
 ### Sensei Main  ![UI](https://img.shields.io/badge/1.4.0-Release-76D754)
+
 <details><summary>SENSEI 1.4 - Distill Forms</summary>
 <p>
 
+![](https://img.shields.io/badge/1.4.1-424949?style=flat-square)
+- Embedded Links
+- Optimized Nuke Function
+  
 ![](https://img.shields.io/badge/1.4.0-424949?style=flat-square)
 - Dual Method Data Update
 - Data Update by Reminder
@@ -72,6 +78,9 @@ There are two methods which this could be setup and become operational on any Wi
 ### Sensei Link - Document Network ![CL](https://img.shields.io/badge/1.0.2-Release-76D754)
 <details><summary>LINK 1.0 - Bridge</summary>
 <p>
+
+![](https://img.shields.io/badge/1.0.3-424949?style=flat-square)
+- Embedded Link for Quick Access
 
 ![](https://img.shields.io/badge/1.0.2-424949?style=flat-square)
 - SENSEI LINK - Bridge between files
