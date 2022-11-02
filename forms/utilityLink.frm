@@ -14,6 +14,7 @@ Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 Option Explicit
+' 20221102
 Public config As Worksheet ' Core Config data
 Public LcCell As Range, LcTrim As Range, Vrrr As Range, VrHere As Range, Vrelease As Range
 Public Cell114 As Range, Trim114 As Range ' 114 Data Cell reference
@@ -144,6 +145,11 @@ Case 2 ' 114
     trimRedux
 Case Else ' DO NOTHING
 End Select
+End Sub
+
+Private Sub uRRR_webDMO_Click()
+    CreateObject("Shell.Application").ShellExecute _
+        "microsoft-edge:https//https://dmoapps.csd.disa.mil/WebDMO/Login.aspx"
 End Sub
 
 Private Sub UserForm_Initialize()

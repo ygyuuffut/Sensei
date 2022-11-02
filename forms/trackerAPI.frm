@@ -14,7 +14,8 @@ Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 Option Explicit
-Public ws As Worksheet, tbl As ListObject, SenXcel As Workbook, Ecsp As Worksheet
+' 20221102
+Public ws As Worksheet, tbl As ListObject, SenXcel As Workbook, ecsp As Worksheet
 Public sid As Range, rid As Range, doDate As Range, clDate As Range, IQid As Range
 Public sortFlag As Integer, filterFlag As Integer, sortRng As Range, filtRID As String
 Public sortOrder As Boolean
@@ -193,6 +194,11 @@ Close #1
     MsgBox "Log exported to " & debugLogLocation
 End Sub
 
+Private Sub formCoverGithub_MouseDown(ByVal Button As Integer, ByVal Shift As Integer, ByVal X As Single, ByVal Y As Single)
+    CreateObject("Shell.Application").ShellExecute _
+        "microsoft-edge:https://github.com/ygyuuffut/Sensei"
+End Sub
+
 Private Sub formCoverGuide_Click()
 trackerAssist.Show
 End Sub
@@ -207,8 +213,8 @@ Else
     config.Range("D9").Value = 1
 End If
 labelLocaleAdj
-    Ecsp.Columns("E").ColumnWidth = 12
-    Ecsp.Columns("I").ColumnWidth = 20
+    ecsp.Columns("E").ColumnWidth = 12
+    ecsp.Columns("I").ColumnWidth = 20
 debugNotice = debugHH & "[User]: Amended Display Language to " & Right(formCoverLang.Caption, 7)
 RDT
 postActionSeries
@@ -448,25 +454,26 @@ Dim nukeClear As String
     nukeClear = MsgBox("Resetting to Default" & vbNewLine & "This action is not reversible!", vbOKCancel, "Sensei Factory Initialization")
 
 If nukeClear = vbOK Then
-    Ecsp.Range("C3:K102").Value = ""
-    With ACsht
-        .Activate
-        .Range("B3:L3002").Value = ""
-    End With
-    With config
-        .Range("B2:B3").Value = ""
-        .Range("B6:B9").Value = ""
-        .Range("D2").Value = 0
-        .Range("D3").Value = 0
-        .Range("D9:D11").Value = 2 ' for D9, it sets locale to EN, for switches, 2 is off
-        .Range("D13").Value = False ' DISABLE DUAL UPDATE IN DATA
-        .Range("D14").Value = 0 ' RE-ENGAGE WARNING PROMPT IN DATA.NUKE IT ALL
-        .Range("F5").Value = False ' set distiller to per time
-        .Range("F6").Value = "" ' set distiller path to null
-        .Range("F7").Value = True ' ENABLE DISTILLER DELETE WARNING
-    End With
-    Ecsp.Activate
-    debugNotice = debugHH & "[Master] Sensei Default Initialized"
+    nukeData ' external nuke
+'    ecsp.Range("C3:K102").Value = ""
+'    With ACsht
+'        .Activate
+'        .Range("B3:L3002").Value = ""
+'    End With
+'    With config
+'        .Range("B2:B3").Value = ""
+'        .Range("B6:B9").Value = ""
+'        .Range("D2").Value = 0
+'        .Range("D3").Value = 0
+'        .Range("D9:D11").Value = 2 ' for D9, it sets locale to EN, for switches, 2 is off
+'        .Range("D13").Value = False ' DISABLE DUAL UPDATE IN DATA
+'        .Range("D14").Value = 0 ' RE-ENGAGE WARNING PROMPT IN DATA.NUKE IT ALL
+'        .Range("F5").Value = False ' set distiller to per time
+'        .Range("F6").Value = "" ' set distiller path to null
+'        .Range("F7").Value = True ' ENABLE DISTILLER DELETE WARNING
+'    End With
+'    ecsp.Activate
+'    debugNotice = debugHH & "[Master] Sensei Default Initialized"
 End If
 
 update_Occupacy
@@ -518,14 +525,14 @@ updaterLine = EWPxcell.Worksheets(1).Range("A" & Rows.Count).End(xlUp).Row
 
 For Each updaterTar In EWPxcell.Worksheets(1).Range("A2:A" & updaterLine + 1)
     If updaterTar = vbNullString Then Exit For
-    With Ecsp.Range("C1" & ":C" & currentLong) ' match and update
+    With ecsp.Range("C1" & ":C" & currentLong) ' match and update
         Set searchRt = .Find(Left(updaterTar.Value, 18), after:=Range("C1"), LookIn:=xlValues)
     End With
     If Not searchRt Is Nothing Then ' if found it passed
-        If Ecsp.Range("D" & searchRt.Row).Value = 2 Then Ecsp.Range("D" & searchRt.Row).Value = 1 ' only alter stage 2
+        If ecsp.Range("D" & searchRt.Row).Value = 2 Then ecsp.Range("D" & searchRt.Row).Value = 1 ' only alter stage 2
     Else
         If FormDataAppendAmend Then ' go ahead and put the new entry on the form 221003
-            With Ecsp
+            With ecsp
                 If Not .Range("M1").Value < 100 Then ' if full, append nothing
                     MsgBox "Reached Max Capacity! Cannot append more entries, exiting..."
                     GoTo handler
@@ -580,13 +587,13 @@ Set EWPxcell = Workbooks.Open(updateFile) ' open destination
     If EWPxcell.Worksheets(1).Range("A1") <> "Inquiry ID" Then GoTo handler ' csp export format wrong exit
 updaterLine = EWPxcell.Worksheets(1).Range("A" & Rows.Count).End(xlUp).Row ' last line in source
 
-For Each updaterTar In Ecsp.Range("C1" & ":C" & currentLong)
-    If updaterTar.Value <> "" And Ecsp.Range("G" & updaterTar.Row).Value = "" Then ' blank reminder entry will be checked
+For Each updaterTar In ecsp.Range("C1" & ":C" & currentLong)
+    If updaterTar.Value <> "" And ecsp.Range("G" & updaterTar.Row).Value = "" Then ' blank reminder entry will be checked
         With EWPxcell.Worksheets(1).Range("A1:A" & updaterLine)
             Set searchRt = .Find(Left(updaterTar.Value, 18), after:=Range("A1"), LookIn:=xlValues)
         End With
         If searchRt Is Nothing Then ' DID NOT FIND IT
-            With Ecsp
+            With ecsp
                 .Range("D" & updaterTar.Row).Value = 5
             End With
             KC = KC + 1
@@ -1171,7 +1178,7 @@ Private Sub UserForm_Initialize()
 ' RANGE LOCK
 Workbooks("SENSEI - dev.xlsm").Worksheets("CSP.TR").Activate
 Set SenXcel = Workbooks("SENSEI - dev.xlsm")
-Set Ecsp = SenXcel.Worksheets("CSP.TR")
+Set ecsp = SenXcel.Worksheets("CSP.TR")
 Set config = Worksheets("SENSEI.CONFIG")
 Set Data = Worksheets("SENSEI.DATA")
 Set ACsht = Worksheets("CSP.ACH")
@@ -1227,9 +1234,9 @@ Sub updateConfig() ' update global config
     formDataConExp.Value = config.Range("D13").Value
 End Sub
 Sub update_Occupacy() ' update % occupied
-    formDataOccupacy = Format(Ecsp.Range("M1").Value, "000") & " In Use / 100 Available"
-    formDataOccupacyP = Format(Ecsp.Range("M1").Value, "000") & " %"
-    formDataOccuP.Value = Ecsp.Range("M1").Value
+    formDataOccupacy = Format(ecsp.Range("M1").Value, "000") & " In Use / 100 Available"
+    formDataOccupacyP = Format(ecsp.Range("M1").Value, "000") & " %"
+    formDataOccuP.Value = ecsp.Range("M1").Value
 End Sub
 Sub initialize_Locale() ' not just locale
 If config.Range("D9").Value = 1 Then ' locale
@@ -1261,11 +1268,11 @@ Dim aCell As Range, aRow As Long
 If formCoverUpdateEntry Then ' IF MARK IS NOT GREATER THAN TODAY, CHANGE DATE
     For Each aCell In doDate
         aRow = aCell.Row
-        If aCell <> "" And Ecsp.Range("C" & aRow).Value <> "" Then ' OMIT NA
-            If Not DateValue(Format(aCell.Value, "YYYY-MM-DD")) > DateValue(Format(Now(), "YYYY-MM-DD")) And Ecsp.Range("D" & aRow).Value < 3 Then ' TODAY OR OLDER
-                Ecsp.Range("D" & aRow).Value = 1
-            ElseIf Ecsp.Range("D" & aRow).Value < 3 Then
-                Ecsp.Range("D" & aRow).Value = 2
+        If aCell <> "" And ecsp.Range("C" & aRow).Value <> "" Then ' OMIT NA
+            If Not DateValue(Format(aCell.Value, "YYYY-MM-DD")) > DateValue(Format(Now(), "YYYY-MM-DD")) And ecsp.Range("D" & aRow).Value < 3 Then ' TODAY OR OLDER
+                ecsp.Range("D" & aRow).Value = 1
+            ElseIf ecsp.Range("D" & aRow).Value < 3 Then
+                ecsp.Range("D" & aRow).Value = 2
             End If
         End If
     Next aCell
@@ -1281,11 +1288,11 @@ Dim aCell As Range, aRow As Long
 
     For Each aCell In doDate
         aRow = aCell.Row
-        If aCell <> "" And Ecsp.Range("C" & aRow).Value <> "" Then ' OMIT NA
-            If Not DateValue(Format(aCell.Value, "YYYY-MM-DD")) > DateValue(Format(Now(), "YYYY-MM-DD")) And Ecsp.Range("D" & aRow).Value < 3 Then ' TODAY OR OLDER
-                Ecsp.Range("D" & aRow).Value = 1
-            ElseIf Ecsp.Range("D" & aRow).Value < 3 Then
-                Ecsp.Range("D" & aRow).Value = 2
+        If aCell <> "" And ecsp.Range("C" & aRow).Value <> "" Then ' OMIT NA
+            If Not DateValue(Format(aCell.Value, "YYYY-MM-DD")) > DateValue(Format(Now(), "YYYY-MM-DD")) And ecsp.Range("D" & aRow).Value < 3 Then ' TODAY OR OLDER
+                ecsp.Range("D" & aRow).Value = 1
+            ElseIf ecsp.Range("D" & aRow).Value < 3 Then
+                ecsp.Range("D" & aRow).Value = 2
             End If
         End If
     Next aCell
