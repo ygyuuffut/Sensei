@@ -9,7 +9,8 @@ Set ecsp = ThisWorkbook.Worksheets("CSP.TR") ' Main Table
 Set acsp = ThisWorkbook.Worksheets("CSP.ACH")
 Set f110a = ThisWorkbook.Worksheets("DEBT.A")
 Set f110b = ThisWorkbook.Worksheets("DEBT.B")
-Set cspRng = Union(config.Range("C3:D102"), config.Range("F3:H102"), config.Range("J3:K102"))
+
+Set cspRng = Union(ecsp.Range("C3:D102"), ecsp.Range("F3:H102"), ecsp.Range("J3:K102"))
 
 Set f110aRng = Union(f110a.Range("A5:A17"), f110a.Range("C5:E17"), _
     f110a.Range("J5:J17"), f110a.Range("H5:H17"), f110a.Range("E23"), _
