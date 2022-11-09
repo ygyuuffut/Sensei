@@ -1,6 +1,7 @@
 Attribute VB_Name = "coreFX_NukeData"
 Option Explicit
-Public config As Worksheet, ecsp As Worksheet, acsp As Worksheet, f110a As Worksheet, f110b As Worksheet
+Public config As Worksheet, ecsp As Worksheet, acsp As Worksheet, f110a As Worksheet, f110b As Worksheet, _
+    depIO As Worksheet
 Public cspRng As Range, f110aRng As Range, f110aRng0 As Range, f110bRng As Range, f110bRng0 As Range
 Sub Initialize()
 
@@ -9,6 +10,7 @@ Set ecsp = ThisWorkbook.Worksheets("CSP.TR") ' Main Table
 Set acsp = ThisWorkbook.Worksheets("CSP.ACH")
 Set f110a = ThisWorkbook.Worksheets("DEBT.A")
 Set f110b = ThisWorkbook.Worksheets("DEBT.B")
+Set depIO = ThisWorkbook.Worksheets("DEP.IO") ' nuke dep io as well
 
 Set cspRng = Union(ecsp.Range("C3:D102"), ecsp.Range("F3:H102"), ecsp.Range("J3:K102"))
 
@@ -36,6 +38,8 @@ f110aRng.ClearContents
 f110aRng0.Value = 0
 f110bRng.ClearContents
 f110bRng0.Value = 0
+depIO.Range("A2:L9999").ClearContents
+
 With config
     ' The Document Link Data Wipe
     .Range("B2:B3").Value = "" ' R3R Wipe
