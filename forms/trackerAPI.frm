@@ -4,7 +4,7 @@ Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} trackerAPI
    ClientHeight    =   6015
    ClientLeft      =   120
    ClientTop       =   465
-   ClientWidth     =   7935
+   ClientWidth     =   8100
    OleObjectBlob   =   "trackerAPI.frx":0000
    StartUpPosition =   1  'CenterOwner
 End
@@ -238,6 +238,11 @@ End Sub
 Private Sub formCoverLaunchCL_Click()
     trackerAPI.Hide
     utilityDictionary.Show
+End Sub
+
+Private Sub formCoverLaunchDepScantron_Click()
+trackerAPI.Hide
+utilityDepScantron.Show
 End Sub
 
 Private Sub formCoverLaunchDistill_Click()
