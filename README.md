@@ -1,6 +1,6 @@
 # SENSEI - A Clustered Applets for Excel
 ![License](https://img.shields.io/badge/License-AGPL%203-BB8FCE?style=flat-square)
-![Version](https://img.shields.io/badge/Version-1.4.1-76D754?style=flat-square)
+![Version](https://img.shields.io/badge/Version-1.5.1-76D754?style=flat-square)
 ![Version Type](https://img.shields.io/badge/Type-Release--01-16A085?style=flat-square)
 ![Language](https://img.shields.io/badge/Language-Virtual%20Basic-EB984E?style=flat-square)
 
@@ -15,10 +15,12 @@ A very much scatter-mind driven programming that develops as demands emerges
 		- [Alternative Method](#alternative-method)
 	- [Update History](#update-history)
 		- [Sensei Main  !UI](#sensei-main--)
-		- [Sensei Link - Document Network !CL](#sensei-link---document-network-)
-		- [Sensei FD - Form Distiller !CL](#sensei-fd---form-distiller-)
-		- [Sensei CL - Common Library !CL](#sensei-cl---common-library-)
-		- [Sensei CE - Coding Engine !CL](#sensei-ce---coding-engine-)
+		- [Sensei Link - Document Network](#sensei-link---document-network-)
+		- [Sensei FD - Form Distiller](#sensei-fd---form-distiller-)
+		- [Sensei DS - Deployee Scantron](#sensei-ds---deployee-scantron-)
+		- [Sensei CL - Common Library](#sensei-cl---common-library-)
+		- [Sensei CE - Coding Engine](#sensei-ce---coding-engine-)
+
 
 
 ## Structure Guidances
@@ -47,7 +49,18 @@ There are two methods which this could be setup and become operational on any Wi
 
 ## Update History
 
-### Sensei Main  ![UI](https://img.shields.io/badge/1.4.1-Release-76D754)
+### Sensei Main  ![UI](https://img.shields.io/badge/1.5.1-Release-76D754)
+
+<details><summary>SENSEI 1.5 - Scantrons</summary>
+<p>
+
+![](https://img.shields.io/badge/1.5.1-424949?style=flat-square)
+- Optimized Scantron and enable Omit function
+  
+![](https://img.shields.io/badge/1.5.0-424949?style=flat-square)
+- Added Scantron Function
+</p>
+</details>
 
 <details><summary>SENSEI 1.4 - Distill Forms</summary>
 <p>
@@ -102,6 +115,21 @@ There are two methods which this could be setup and become operational on any Wi
 </p>
 </details>
 
+### Sensei DS - Deployee Scantron ![CL](https://img.shields.io/badge/1.0.1-Release-76D754)
+<details><summary>DS 1.0 - Data Handler</summary>
+<p>
+
+![](https://img.shields.io/badge/1.0.1-424949?style=flat-square)
+- Optimized Function handling speed
+- Added Omit function
+
+![](https://img.shields.io/badge/1.0.0-424949?style=flat-square)
+- SENSEI Deployee Scantron Introduction
+- Full iteration and Data recognition Logic
+
+</p>
+</details>
+
 ### Sensei CL - Common Library ![CL](https://img.shields.io/badge/0.4.0-Develop-FF4545)
 <details><summary>CL 0.4 - In Development</summary>
 <p>
@@ -115,6 +143,7 @@ There are two methods which this could be setup and become operational on any Wi
 - Allow Update from DJMS TABLE
 </p>
 </details>
+
 
 ### Sensei CE - Coding Engine ![CL](https://img.shields.io/badge/0.0.1-Un--Started-888895)
 <details><summary>CE 0.0 - Un-started</summary>
