@@ -194,7 +194,7 @@ Close #1
     MsgBox "Log exported to " & debugLogLocation
 End Sub
 
-Private Sub formCoverGithub_MouseDown(ByVal Button As Integer, ByVal Shift As Integer, ByVal X As Single, ByVal Y As Single)
+Private Sub formCoverGithub_MouseDown(ByVal Button As Integer, ByVal Shift As Integer, ByVal x As Single, ByVal Y As Single)
     CreateObject("Shell.Application").ShellExecute _
         "microsoft-edge:https://github.com/ygyuuffut/Sensei"
 End Sub

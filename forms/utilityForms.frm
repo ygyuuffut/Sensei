@@ -72,7 +72,7 @@ handler:
 End Sub
 
 
-Private Sub f110_delall_Click()
+Private Sub f110_delall_Click() ' 110 delete all items
 Dim ResQ As String, na As String, npy As String
     na = vbNullString
     npy = 0
@@ -100,8 +100,10 @@ End If
     gradeP2 = na
     name110 = na
     ssn110 = na
-    f110_name.Value = na
-    f110_ssn.Value = na
+    If Not f110c_keepMbr Then ' do when unprotected
+        f110_name.Value = na
+        f110_ssn.Value = na
+    End If
     f110rowDispUpdate
     
 update110Display
@@ -142,7 +144,8 @@ End If
 f110rowDispUpdate
 End Sub
 
-Private Sub f110_dispM1_Click()
+Private Sub f110_dispM1_Click() ' 110 goto previous page
+If Disp_all Or Disp_Link Then Exit Sub
 If DispPage > 1 Then ' a simple minus one page
     DispPage = DispPage - 1
 Else
@@ -152,7 +155,8 @@ f110_dispP.Caption = DispPage
 update110Display ' DO SOME AUTO UPDATE WHEN CHANGE PAGE
 End Sub
 
-Private Sub f110_dispM2_Click()
+Private Sub f110_dispM2_Click() ' 110 goto next page
+If Disp_all Or Disp_Link Then Exit Sub
 If DispPage < 4 Then ' a simple plus one page
     DispPage = DispPage + 1
 Else
@@ -202,7 +206,7 @@ f110rowDueAmuUpdate ' update due amount
 update110Display
 End Sub
 
-Private Sub f110_export_Click()
+Private Sub f110_export_Click() ' 110 export function
 Dim saveToPrompt
 
 On Error GoTo handleIt
@@ -241,6 +245,10 @@ Private Sub f110_fica_Change() ' 110 fica
 WND:
 f110rowDueAmuUpdate
 updateCompDebt
+End Sub
+
+Private Sub f110_inherit_Click() ' 110 Inherit from previous Entry
+    f110rowDispInherit ' inherit function
 End Sub
 
 Private Sub f110_itemGrade_Change() ' 110 GRADE/YEAR
@@ -285,7 +293,7 @@ f110rowDueAmuUpdate
 updateCompDebt
 End Sub
 
-Private Sub f110_name_Change()
+Private Sub f110_name_Change() ' 110 name
     name110.Value = f110_name.Value
 End Sub
 
@@ -316,7 +324,7 @@ f110rowDueAmuUpdate
 updateCompDebt
 End Sub
 
-Private Sub f110_ssn_Change()
+Private Sub f110_ssn_Change() ' 110 SSN
     ssn110.Value = f110_ssn.Value
 End Sub
 
@@ -403,6 +411,70 @@ ElseIf f110_PageCt.Value = "P.2" Then ' PAGE TWO
     End With
 End If
 End Sub
+Sub f110rowDispInherit() ' 110 entry inherition from previous
+' 5-17 page one; 5-26 page two
+Dim isPrev As Long, isFine As String ' see if current line exist
+If f110Row = 5 And f110_PageCt.Value = "P.1" Then ' page one first entry nothing happen
+    MsgBox "This is the first entry...", vbOKOnly, "Distiller Form 110"
+ElseIf f110Row > 5 And f110Row < 18 And f110_PageCt.Value = "P.1" Then ' PAGE ONE others
+    With F110p1
+        isPrev = Application.WorksheetFunction.CountA(.Range("A" & f110Row & ":" & "N" & f110Row))
+            If isPrev <> 8 And Not f110c_inherit Then ' if current not blank, huston we have a problem
+                isFine = MsgBox("You are about to overwrite this line, Continue?", vbYesNo, "Distiller Form 110")
+                If isFine = vbNo Then Exit Sub
+            End If
+        f110_strDate.Value = .Range("A" & f110Row - 1).Value
+        f110_endDate.Value = .Range("C" & f110Row - 1).Value
+        f110_itemName.Value = .Range("D" & f110Row - 1).Value
+        f110_itemType.Value = .Range("E" & f110Row - 1).Value
+        f110_itemGrade.Value = .Range("J" & f110Row - 1).Value
+        f110_paidRate.Value = .Range("H" & f110Row - 1).Value
+        f110_dueRate.Value = .Range("K" & f110Row - 1).Value
+        f110_dueUS.Value = .Range("N" & f110Row - 1).Value
+        f110_dueClaimant.Caption = Format(.Range("M" & f110Row - 1).Value, "$0.00")
+        SITWdrop.Value = .Range("E23").Value
+        f110_sitw.Value = .Range("J23").Value
+        f110_med.Value = .Range("J22").Value
+        f110_fica.Value = .Range("J21").Value
+    End With
+ElseIf f110Row = 5 And f110_PageCt.Value = "P.2" Then ' first in page two inherit p1 end
+    With F110p2
+        isPrev = Application.WorksheetFunction.CountA(.Range("A" & f110Row & ":" & "N" & f110Row))
+            If isPrev <> 8 And Not f110c_inherit Then ' if current not blank, huston we have a problem
+                isFine = MsgBox("You are about to overwrite this line, Continue?", vbYesNo, "Distiller Form 110")
+                If isFine = vbNo Then Exit Sub
+            End If
+    End With
+    With F110p1
+        f110_strDate.Value = .Range("A17").Value
+        f110_endDate.Value = .Range("C17").Value
+        f110_itemName.Value = .Range("D17").Value
+        f110_itemType.Value = .Range("E17").Value
+        f110_itemGrade.Value = .Range("J17").Value
+        f110_paidRate.Value = .Range("H17").Value
+        f110_dueRate.Value = .Range("K17").Value
+        f110_dueUS.Value = .Range("N17").Value
+        f110_dueClaimant.Caption = Format(.Range("M17").Value, "$0.00")
+    End With
+ElseIf f110Row > 5 And f110Row < 27 And f110_PageCt.Value = "P.2" Then ' page two others
+    With F110p2
+        isPrev = Application.WorksheetFunction.CountA(.Range("A" & f110Row & ":" & "N" & f110Row))
+            If isPrev <> 8 And Not f110c_inherit Then ' if current not blank, huston we have a problem
+                isFine = MsgBox("You are about to overwrite this line, Continue?", vbYesNo, "Distiller Form 110")
+                If isFine = vbNo Then Exit Sub
+            End If
+        f110_strDate.Value = .Range("A" & f110Row - 1).Value
+        f110_endDate.Value = .Range("C" & f110Row - 1).Value
+        f110_itemName.Value = .Range("D" & f110Row - 1).Value
+        f110_itemType.Value = .Range("E" & f110Row - 1).Value
+        f110_itemGrade.Value = .Range("J" & f110Row - 1).Value
+        f110_paidRate.Value = .Range("H" & f110Row - 1).Value
+        f110_dueRate.Value = .Range("K" & f110Row - 1).Value
+        f110_dueUS.Value = .Range("N" & f110Row - 1).Value
+        f110_dueClaimant.Caption = Format(.Range("M" & f110Row - 1).Value, "$0.00")
+    End With
+End If
+End Sub
 Sub f110rowDueAmuUpdate() ' 110 due claimant update
 If f110_PageCt.Value = "P.1" Then ' page 1
     f110_dueClaimant.Caption = Format(F110p1.Range("M" & f110Row).Value, "$0.00")
@@ -410,7 +482,49 @@ ElseIf f110_PageCt.Value = "P.2" Then ' page 2
     f110_dueClaimant.Caption = Format(F110p2.Range("M" & f110Row).Value, "$0.00")
 End If
 End Sub
+Private Sub f110c_dispAll_Click() ' 110 When this is enabled, display all entries regardless
+If f110c_dispAll Then
+    f110c_dispAll.Caption = "Disp. All"
+    f110c_dispFollow = False
+    Disp_all = True
+Else
+    f110c_dispAll.Caption = "This Page"
+    Disp_all = False
+End If
+config.Range("F33").Value = Disp_all
+update110Display ' immediately flip the display
+End Sub
 
+Private Sub f110c_dispFollow_Click() ' 110 Make display follows user's editor number
+If f110c_dispFollow Then
+    f110c_dispFollow.Caption = "Linked"
+    f110c_dispAll = False
+    Disp_Link = True
+Else
+    f110c_dispFollow.Caption = "Split"
+    Disp_Link = False
+End If
+config.Range("F34").Value = Disp_Link
+f110rowSwitchLink ' immediately inflict linkage update
+End Sub
+
+Private Sub f110c_inherit_Click() ' 110 inherit warning control
+If f110c_inherit Then
+    f110c_inherit.Caption = "Mute"
+Else
+    f110c_inherit.Caption = "Warn"
+End If
+config.Range("F36").Value = f110c_inherit
+End Sub
+
+Private Sub f110c_keepMbr_Click() ' 110 do we want to keep personal info?
+If f110c_keepMbr Then
+    f110c_keepMbr.Caption = "Retain"
+Else
+    f110c_keepMbr.Caption = "Discard"
+End If
+config.Range("F35").Value = f110c_keepMbr
+End Sub
 
 Private Sub Gconfig_delWarn_Click() ' GLOBAL CONFIG WARN BEFORE DELETE
 If Gconfig_delWarn Then
@@ -500,6 +614,12 @@ Private Sub UserForm_Initialize()
     FormVersion.Caption = formVer.Value & " on " & Sver.Value
     saveTo = config.Range("F6").Value
     saveOptn = config.Range("F5").Value
+
+    initialize110 ' initialize 110
+    
+    loadGconfig ' GLOBAL CONFIG LOADER
+End Sub
+Sub initialize110() ' initialize 110 content
 ' FIGURE ERASE RANGE
     With F110p1 ' 110 setup pAGE 1
         Set paidRateP1 = .Range("H5:H17") '$ PAID
@@ -532,16 +652,22 @@ Private Sub UserForm_Initialize()
     writeSITWlist ' 110
 ' Write update 0 for Display
     DispPage = 1 ' 110 display page #
-    Disp_all = False ' temporary 110
-    Disp_Link = False ' temporary 110
+    
+    Disp_all = config.Range("F33").Value ' temporary 110 to display all
+        f110c_dispAll = Disp_all ' update in settings
+    Disp_Link = config.Range("F34").Value ' temporary 110 to follow the display
+        f110c_dispFollow = Disp_Link ' update from settings
+        f110c_keepMbr = config.Range("F35").Value
+        f110c_inherit = config.Range("F36").Value
+        
     update110Display ' 110
     f110Row = f110_RowCt.Value ' 110 - Make row Number valid
     f110rowDispUpdate ' 110 - UPDATE FIELD
     f110_name.Value = name110.Value ' 110 LOAD NAME
     f110_ssn = ssn110.Value ' 110 LOAD SSN
 
-    loadGconfig ' GLOBAL CONFIG LOADER
 End Sub
+
 Sub loadGconfig() ' GLOBAL Config loader
 
 Gconfig_saveOptn.Value = config.Range("F5").Value
@@ -586,9 +712,10 @@ Dim cA As String, cC As String, cD As String, cE As String, cF As String, cG As 
             apLoopRwP = 31
         End Select
     Else
+        apLoopRwP = 1
     End If
     disp110.Value = "" ' CURRENTLY JUST WIPE IT, TILL WE ADDED DISPLAY ALL THEN WE STOP.
-    For apLoopRw = apLoopRwP To 35
+For apLoopRw = apLoopRwP To 35
     ' page fx inserted here \/
     If Not Disp_all Then ' display by page
         Select Case DispPage
@@ -636,10 +763,10 @@ Dim cA As String, cC As String, cD As String, cE As String, cF As String, cG As 
             cL = Format(.Range("L" & apActual), "00000.00")
                 If .Range("L" & apActual) = "" Or .Range("L" & apActual) = 0 Then cL = "        "  ' DUE TOT.
             cM = Format(.Range("M" & apActual), "+00000.00")
-                If .Range("I" & apActual) = 0 Or .Range("M" & apActual) = 0 Then cM = "         "  ' DUE MBR
+                If .Range("I" & apActual) = 0 And .Range("M" & apActual) = 0 Then cM = "         "  ' DUE MBR
                 If .Range("M" & apActual) < 0 Then cM = Format(.Range("M" & apActual), "00000.00") ' lesser than 0
             cN = Format(.Range("N" & apActual), "+00000.00")
-                If .Range("N" & apActual) = "" Or .Range("N" & apActual) = 0 Then cN = "        "  ' DUE US
+                If .Range("N" & apActual) = "" And .Range("N" & apActual) = 0 Then cN = "        "  ' DUE US
                 If .Range("N" & apActual) < 0 Then cN = Format(.Range("N" & apActual), "00000.00") ' lesser than 0
                 
             apArray = apArray & vbNewLine & "E-" & Format(apLoopRw, "00") & ":" & sP & cA & cC & sP & cD & sP & cE & sP & cF & " " & cG & sP & cH & sP & cI & sP & cJ & sP & cK & sP & cL & sP & cM & sP & cN
@@ -670,17 +797,17 @@ Dim cA As String, cC As String, cD As String, cE As String, cF As String, cG As 
             cL = Format(.Range("L" & apActual), "00000.00")
                 If .Range("L" & apActual) = "" Or .Range("L" & apActual) = 0 Then cL = "        "  ' DUE TOT.
             cM = Format(.Range("M" & apActual), "600000.00")
-                If .Range("I" & apActual) = 0 Or .Range("M" & apActual) = 0 Then cM = "         "  ' DUE MBR
+                If .Range("I" & apActual) = 0 And .Range("M" & apActual) = 0 Then cM = "         "  ' DUE MBR
                 If .Range("M" & apActual) < 0 Then cM = Format(.Range("M" & apActual), "0000.00") ' lesser than 0
             cN = Format(.Range("N" & apActual), "+00000.00")
-                If .Range("N" & apActual) = "" Or .Range("N" & apActual) = 0 Then cN = "        "  ' DUE US
+                If .Range("N" & apActual) = "" And .Range("N" & apActual) = 0 Then cN = "        "  ' DUE US
                 If .Range("N" & apActual) < 0 Then cN = Format(.Range("N" & apActual), "00000.00") ' lesser than 0
 
                 
             apArray = apArray & vbNewLine & "E-" & Format(apLoopRw, "00") & ":" & sP & cA & cC & sP & cD & sP & cE & sP & cF & " " & cG & sP & cH & sP & cI & sP & cJ & sP & cK & sP & cL & sP & cM & sP & cN
         End With
     End If
-    Next apLoopRw
+Next apLoopRw
 
 ' INITIALIZE
     disp110.Value = apArray ' was defValue & apArray
