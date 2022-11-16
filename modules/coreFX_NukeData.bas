@@ -51,10 +51,11 @@ With config
     .Range("D9:D11").Value = 2 ' D9 (1-ZH, 2-EN), all others (2 - off)
     .Range("D13").Value = False ' Pull 2 Excel Cards for Dual Update of entires
     .Range("D14").Value = 0 ' Reset Dual Update warning to enabled
-    ' Form 110 Setting
+    ' Form Distiller General Setting
     .Range("F5").Value = False ' Reset Distiller to variable locations (appoint per time)
     .Range("F6").Value = "" ' Reset Distiller Fixed Export Path
     .Range("F7").Value = True ' Reset Distiller Deletion warning to enable
+    .Range("F33:F36").Value = False ' 110 - config group
 End With
 
 Application.ScreenUpdating = True
