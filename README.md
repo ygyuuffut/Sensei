@@ -102,9 +102,12 @@ There are two methods which this could be setup and become operational on any Wi
 </p>
 </details>
 
-### Sensei FD - Form Distiller ![CL](https://img.shields.io/badge/1.0.0-Release-76D754)
+### Sensei FD - Form Distiller ![CL](https://img.shields.io/badge/1.1.0-Release-76D754)
 <details><summary>FD 1.0 - Distilling Forms</summary>
 <p>
+
+![](https://img.shields.io/badge/1.1.0-424949?style=flat-square)
+  - Additional Controlls for Form 110
 
 ![](https://img.shields.io/badge/1.0.0-424949?style=flat-square)
 - SENSEI Form Distller introduction
