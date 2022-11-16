@@ -1,6 +1,6 @@
 # SENSEI - A Clustered Applets for Excel
 ![License](https://img.shields.io/badge/License-AGPL%203-BB8FCE?style=flat-square)
-![Version](https://img.shields.io/badge/Version-1.5.1-76D754?style=flat-square)
+![Version](https://img.shields.io/badge/Version-1.5.2-76D754?style=flat-square)
 ![Version Type](https://img.shields.io/badge/Type-Release--01-16A085?style=flat-square)
 ![Language](https://img.shields.io/badge/Language-Virtual%20Basic-EB984E?style=flat-square)
 
@@ -54,6 +54,9 @@ There are two methods which this could be setup and become operational on any Wi
 <details><summary>SENSEI 1.5 - Scantrons</summary>
 <p>
 
+![](https://img.shields.io/badge/1.5.2-424949?style=flat-square)
+- Bumped due to Distiller Update
+	
 ![](https://img.shields.io/badge/1.5.1-424949?style=flat-square)
 - Optimized Scantron and enable Omit function
   
