@@ -93,7 +93,7 @@ End If
     periodEndP1 = na
     periodEndP2 = na
     itemP1 = na
-    itemP1 = na
+    itemP2 = na
     typeP1 = na
     typeP2 = na
     gradeP1 = na
