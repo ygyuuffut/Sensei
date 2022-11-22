@@ -1,7 +1,7 @@
 VERSION 5.00
 Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} utilityForms 
    Caption         =   "Sensei Debt Computation"
-   ClientHeight    =   7695
+   ClientHeight    =   7680
    ClientLeft      =   120
    ClientTop       =   465
    ClientWidth     =   12555
@@ -19,10 +19,22 @@ Option Explicit
 '
 '
 ' ###############################
+'
+' ########## TODO LIST ##########
+' 2424 Finish the basic writing mechanism
+' 2424 Initialization complete procedure
+' 2424 Config link
+'
+'
+'
+'
+' ###############################
 ' =========== GLOBAL VARIABLE ============
+' gconfig_delwarn as global management
 Public config As Worksheet ' config
 Public formVer As Range, Sver As Range ' Form version and Sensei Version
 Public saveTo As String, saveOptn As Boolean ' the location and is prompt allowed?
+Const na As String = vbNullString ' the nothing string
 ' ========================================
 ' =========== FORM 110 VARIABLE ====================================================
 ' Data for Row and Range selection
@@ -40,6 +52,7 @@ Public itemP1 As Range, typeP1 As Range, gradeP1 As Range ' According 3 coloumns
 Public itemP2 As Range, typeP2 As Range, gradeP2 As Range ' p2
 Public taxIso As Range ' isolated tax on p1
 Public name110 As Range, ssn110 As Range ' person info
+Public f110delW As Range ' delete indicator config
 ' Fixed Display Data
 Public stPer As Range ' State %
 Public debtTotal As Range
@@ -57,6 +70,22 @@ Public Data As Worksheet, Tab1 As Range ' Data sheet and table range for SITW %
 Public DispPage As Long, Disp_all As Boolean, Disp_Link As Boolean
 ' ==================================================================================
 
+' =========== FORM 2424 VARIABLE ===================================================
+' Data for 2424 Pages
+Public f2424 As Worksheet
+' Data for Specific 2424 Fill Range
+Public f2424amount As Range, f2424amountF As Range ' amount
+Public f2424PA As Range, f2424PC As Range, f2424PK As Range, f2424PQ As Range ' options
+Public f2424O As Range, f2424Oex As Range, f2424Cat As Range ' options others and addition
+Public f2424SSN As Range, f2424Name As Range, f2424Rank As Range ' Member info
+Public f2424expl As Object ' the text box for computation
+' Data for 2424 config switches
+Public f2424cDelw As Range, f2424cStartNew As Range ' delete warning, new page
+Public f2424cMNA As Range, f2424cSSNlink As Range ' not available, ssn linkage
+Public f2424cPrev As Range, f2424cPrevType As Range ' prior selected pay type
+Public f2424Ptype As String, f2424Cancel As Boolean ' type flag and remove flag
+' ==================================================================================
+
 Private Sub amountList_Change() ' 110 CHANGE LOGIC REQUIRED, STR IS PREFERRED
 On Error GoTo handler
     If CDbl(amountList.Value) - CDbl(amountSum.Value) <> 0 Or amountList.Value = "" Or amountSum.Value = "" Then
@@ -70,14 +99,14 @@ handler:
     amountMatch.Value = "--"
     updateCompDebt ' UPDATE MATCH
 End Sub
-
-
 Private Sub f110_delall_Click() ' 110 delete all items
-Dim ResQ As String, na As String, npy As String
-    na = vbNullString
+f110nukeAll
+End Sub
+Sub f110nukeAll() ' 110 nuke function
+Dim ResQ As String, npy As String
     npy = 0
     
-If Gconfig_delWarn Then
+If Gconfig_delWarn Or Not f110c_delWarn Then
         ResQ = MsgBox("Reset form?", vbYesNo, "Form Distiller")
     If ResQ = vbNo Then Exit Sub
 End If
@@ -110,33 +139,33 @@ update110Display
 End Sub
 
 Private Sub f110_delone_Click() ' remove one entry
-If Gconfig_delWarn Then
+If Gconfig_delWarn Or Not f110c_delWarn Then
     Dim ResQ As String
         ResQ = MsgBox("Delete this Entry?", vbYesNo, "Form Distiller")
     If ResQ = vbNo Then Exit Sub
 End If
 If f110_PageCt.Value = "P.1" Then ' PAGE ONE
     With F110p1
-        f110_strDate.Value = ""
-        f110_endDate.Value = ""
-        f110_itemName.Value = ""
-        f110_itemType.Value = ""
-        f110_itemGrade.Value = ""
+        f110_strDate.Value = na
+        f110_endDate.Value = na
+        f110_itemName.Value = na
+        f110_itemType.Value = na
+        f110_itemGrade.Value = na
         f110_paidRate.Value = 0
         f110_dueRate.Value = 0
-        f110_dueUS.Value = ""
+        f110_dueUS.Value = na
         f110_dueClaimant.Caption = Format(.Range("M" & f110Row).Value, "$0.00")
     End With
 ElseIf f110_PageCt.Value = "P.2" Then ' PAGE TWO
     With F110p2
-        f110_strDate.Value = ""
-        f110_endDate.Value = ""
-        f110_itemName.Value = ""
-        f110_itemType.Value = ""
-        f110_itemGrade.Value = ""
+        f110_strDate.Value = na
+        f110_endDate.Value = na
+        f110_itemName.Value = na
+        f110_itemType.Value = na
+        f110_itemGrade.Value = na
         f110_paidRate.Value = 0
         f110_dueRate.Value = 0
-        f110_dueUS.Value = ""
+        f110_dueUS.Value = na
         f110_dueClaimant.Caption = Format(.Range("M" & f110Row).Value, "$0.00")
     End With
 End If
@@ -206,9 +235,12 @@ f110rowDueAmuUpdate ' update due amount
 update110Display
 End Sub
 
-Private Sub f110_export_Click() ' 110 export function
+Private Sub f110_export_Click() ' 110 export function, add support for fixed directory
 Dim saveToPrompt
+Dim Cpath As String: Cpath = na ' current path contains no name
+Dim Cexist As String
 
+    saveTo = config.Range("F6").Value
 On Error GoTo handleIt
 If Not saveOptn Or saveTo = "" Then ' ALWAYS PROMPT IF DISABLED PATHWAY OR SAVETO IS BLANK
     Set saveToPrompt = Application.FileDialog(msoFileDialogFolderPicker)
@@ -220,17 +252,33 @@ If Not saveOptn Or saveTo = "" Then ' ALWAYS PROMPT IF DISABLED PATHWAY OR SAVET
         If .Show <> -1 Then GoTo exportForm
         saveTo = .SelectedItems(1)
     End With
+Else
+    Cexist = Dir(saveTo & "\Form 110 Exports\", vbDirectory) ' check parent
+    If Cexist = "" Then
+        Cexist = saveTo & "\Form 110 Exports\"
+        MkDir Cexist ' A FIXED DIRECTORY
+    End If
+    Cexist = Dir(saveTo & "\Form 110 Exports\" & Format(Now(), "YYYY-MM"), vbDirectory) ' check child
+    If Cexist = "" Then
+        Cexist = saveTo & "\Form 110 Exports\" & Format(Now(), "YYYY-MM")
+        MkDir Cexist ' A FIXED DIRECTORY
+    End If
+    Cpath = saveTo & "\Form 110 Exports\" & Format(Now(), "YYYY-MM") ' assign to Cpath
 End If
 
 
 exportForm:
 Set saveToPrompt = Nothing ' UNLOAD OBJECT >>Does not save any way ?
-    F110p1.ExportAsFixedFormat xlTypePDF, _
-        Filename:=saveTo & "\COMP." & Left(f110_name.Value, 5) & ".01"
-    If F110p1.Range("M18").Value <> 0 Then F110p2.ExportAsFixedFormat xlTypePDF, _
-        Filename:=saveTo & "\COMP." & Left(f110_name.Value, 5) & ".02"
-    Exit Sub
+If Not saveOptn Or saveTo = "" Then Cpath = saveTo  ' only wrote when fixed path is not activated
 
+' add a Mkdir, or make directory for when under constant method
+    F110p1.ExportAsFixedFormat xlTypePDF, _
+        Filename:=Cpath & "\110.COMP." & Left(f110_name.Value, 5) & "." & Format(Now(), "YYMMDD-HHMMSS") & ".01"
+    If F110p1.Range("M18").Value <> 0 Then F110p2.ExportAsFixedFormat xlTypePDF, _
+        Filename:=Cpath & "\110.COMP." & Left(f110_name.Value, 5) & "." & Format(Now(), "YYMMDD-HHMMSS") & ".02"
+    Application.StatusBar = "Form 110 has been exported to " & Cpath
+    Exit Sub
+    If f110c_startNew Then f110nukeAll
 handleIt:
 
 End Sub
@@ -482,6 +530,18 @@ ElseIf f110_PageCt.Value = "P.2" Then ' page 2
     f110_dueClaimant.Caption = Format(F110p2.Range("M" & f110Row).Value, "$0.00")
 End If
 End Sub
+
+Private Sub f110c_delWarn_Click() ' 110 DELETE WARNING
+If f110c_delWarn Then
+    f110delW.Value = True
+    f110c_delWarn.Caption = "Mute"
+Else
+    f110delW.Value = False
+    f110c_delWarn.Caption = "Warn"
+End If
+
+End Sub
+
 Private Sub f110c_dispAll_Click() ' 110 When this is enabled, display all entries regardless
 If f110c_dispAll Then
     f110c_dispAll.Caption = "Disp. All"
@@ -526,6 +586,325 @@ End If
 config.Range("F35").Value = f110c_keepMbr
 End Sub
 
+Private Sub f110c_SSNlookup_Click() ' 110 SSN look up
+
+' Require function of dictionary write, dictionary append and dictionary look
+
+End Sub
+
+Private Sub f110c_startNew_Click() ' 110 Export erase option
+If f110c_startNew Then
+    config.Range("F38").Value = True
+    f110c_startNew.Caption = "Enabled"
+Else
+    config.Range("F38").Value = False
+    f110c_startNew.Caption = "Disabled"
+End If
+End Sub
+
+Private Sub f2424_amount_Change() ' 2424 place an amount
+
+f2424amount.Value = f2424_amount.Value
+
+On Error GoTo problems ' do not need error to break the thing, wrote the words
+
+If f2424_amount.Value <> na Then
+    f2424_amountFig.Caption = SpellDollar(Format(f2424_amount.Value, "0.00"))
+Else
+    f2424_amountFig.Caption = ""
+End If
+f2424amountF.Value = f2424_amountFig.Caption
+Exit Sub
+
+problems:
+End Sub
+
+Private Sub f2424_delall_Click() ' 2424 nuke the form
+f2424nuke
+End Sub
+
+Sub f2424nuke() ' 2424 Delete file
+
+Dim Qres As String
+If Not f2424c_DelWarn Or Gconfig_delWarn Then ' prompt only if warn is on
+    Qres = MsgBox("Reset form?", vbYesNo, "Form Distiller")
+    If Qres = vbNo Then Exit Sub
+End If
+
+Dim unionPay As Range: Set unionPay = Union(f2424O, f2424PA, _
+                                      f2424PC, f2424PK, f2424PQ, f2424Oex, f2424amountF)
+    unionPay.Value = na
+f2424_amount.Value = na
+f2424_amountFig.Caption = na
+
+f2424Cancel = True ' do not trigger loop
+    f2424_typePA.Value = False
+    f2424_typePC.Value = False
+    f2424_typePK.Value = False
+    f2424_typePQ.Value = False
+    f2424_typeO.Value = False
+f2424Cancel = False ' reset flag
+
+f2424_typeOex.Value = na
+f2424_typeCat.Value = na
+f2424_mbrSSN.Value = na
+f2424_mbrRank.Value = na
+f2424_mbrName.Value = na
+f2424_explain.Value = na
+
+If f2424c_Prev Then ' adapt the prior transaction type
+    f2424Ptype = f2424cPrevType.Value
+    f2424payType
+    If f2424PA.Value = "X" Then f2424_typePA.Value = True
+    If f2424PC.Value = "X" Then f2424_typePC.Value = True
+    If f2424PK.Value = "X" Then f2424_typePK.Value = True
+    If f2424PQ.Value = "X" Then f2424_typePQ.Value = True
+    If f2424O.Value = "X" Then f2424_typeO.Value = True
+End If
+
+End Sub
+
+Private Sub f2424_explain_Change() ' 2424 additional comments
+f2424expl.Text = f2424_explain.Value
+f2424_explainCount.Caption = 1000 - Len(f2424_explain.Text)
+End Sub
+
+
+Private Sub f2424_export_Click() ' 2424 Export, now support fixed directory
+Dim saveToPrompt
+Dim Cpath As String: Cpath = na ' current path contains no name
+Dim Cexist As String
+
+    saveTo = config.Range("F6").Value
+On Error GoTo handleIt
+If Not saveOptn Or saveTo = "" Then ' ALWAYS PROMPT IF DISABLED PATHWAY OR SAVETO IS BLANK
+    Set saveToPrompt = Application.FileDialog(msoFileDialogFolderPicker)
+    With saveToPrompt
+        .Title = "Sending Form 2424 to here..."
+        .ButtonName = "Save"
+        .AllowMultiSelect = False
+        .InitialFileName = Application.DefaultFilePath
+        If .Show <> -1 Then GoTo exportForm
+        saveTo = .SelectedItems(1)
+    End With
+Else
+    Cexist = Dir(saveTo & "\Form 2424 Exports\", vbDirectory) ' check parent
+    If Cexist = "" Then
+        Cexist = saveTo & "\Form 2424 Exports\"
+        MkDir Cexist ' A FIXED DIRECTORY
+    End If
+    Cexist = Dir(saveTo & "\Form 2424 Exports\" & Format(Now(), "YYYY-MM"), vbDirectory) ' check child
+    If Cexist = "" Then
+        Cexist = saveTo & "\Form 2424 Exports\" & Format(Now(), "YYYY-MM")
+        MkDir Cexist ' A FIXED DIRECTORY
+    End If
+    Cpath = saveTo & "\Form 2424 Exports\" & Format(Now(), "YYYY-MM") ' assign to Cpath
+End If
+
+
+exportForm:
+Set saveToPrompt = Nothing ' UNLOAD OBJECT >>Does not save any way ?
+If Not saveOptn Or saveTo = "" Then Cpath = saveTo ' only wrote when fixed path is not activated
+
+' add a Mkdir, or make directory for when under constant method
+    f2424.ExportAsFixedFormat xlTypePDF, _
+        Filename:=Cpath & "\2424." & Left(f110_name.Value, 5) & "." & Format(Now(), "YYMMDD-HHMMSS")
+    Application.StatusBar = "Form 2424 has been exported to " & Cpath
+    If f2424c_StartNew Then f2424nuke
+    Exit Sub
+    
+handleIt:
+
+End Sub
+
+Private Sub f2424_mbrName_Change() ' 2424 Member Name
+f2424Name = f2424_mbrName.Value
+End Sub
+
+Private Sub f2424_mbrRank_Change() ' 2424 Member rank
+f2424Rank.Value = f2424_mbrRank.Value
+End Sub
+
+Private Sub f2424_mbrSSN_Change() ' 2424 Member SSN
+If f2424cSSNlink Then ' if found Link Setting is on then
+    f2424_mbrName.Enabled = False
+    f2424_mbrRank.Enabled = False
+    ' do lookup
+Else
+    f2424_mbrName.Enabled = True
+    f2424_mbrRank.Enabled = True
+    ' lock name and Rank then find them
+End If
+
+f2424SSN.Value = f2424_mbrSSN.Value
+End Sub
+
+Private Sub f2424_typeCat_Change() ' 2424 Category of Adv Pay
+f2424Cat.Value = f2424_typeCat.Value
+End Sub
+
+Private Sub f2424_typeO_Click() ' 2424 Other Pay
+If f2424Cancel Then Exit Sub
+f2424Ptype = "PO"
+f2424cPrevType.Value = f2424Ptype
+f2424payType
+f2424Cancel = False
+End Sub
+
+Private Sub f2424_typeOex_Change() ' 2424 Specification of Others
+f2424Oex.Value = f2424_typeOex
+End Sub
+
+Private Sub f2424_typePA_Click() ' 2424 PA pay
+If f2424Cancel Then Exit Sub
+f2424Ptype = "PA"
+f2424cPrevType.Value = f2424Ptype
+f2424payType
+f2424Cancel = False
+End Sub
+
+Private Sub f2424_typePC_Click() ' 2424 PC pay
+If f2424Cancel Then Exit Sub
+f2424Ptype = "PC"
+f2424cPrevType.Value = f2424Ptype
+f2424payType
+f2424Cancel = False
+End Sub
+
+Private Sub f2424_typePK_Click() ' 2424 PK pay
+If f2424Cancel Then Exit Sub
+f2424Ptype = "PK"
+f2424cPrevType.Value = f2424Ptype
+f2424payType
+f2424Cancel = False
+End Sub
+
+Private Sub f2424_typePQ_Click() ' 2424 PQ pay
+If f2424Cancel Then Exit Sub
+f2424Ptype = "PQ"
+f2424cPrevType.Value = f2424Ptype
+f2424payType
+f2424Cancel = False
+End Sub
+Sub f2424payType() ' 2424 Adjustment for all options, not the best, but it works 221121
+Dim unionPay As Range: Set unionPay = Union(f2424O, f2424PA, f2424PC, f2424PK, f2424PQ)
+    unionPay.Value = na
+    
+If f2424Ptype = "PO" Then
+    f2424Cancel = True
+    f2424_typePA.Value = False
+    f2424_typePC.Value = False
+    f2424_typePK.Value = False
+    f2424_typePQ.Value = False
+    f2424_typeOex.Enabled = True
+        f2424Oex.Value = f2424_typeOex
+    f2424O.Value = "X"
+    Exit Sub
+End If
+If f2424Ptype = "PA" Then
+    f2424Cancel = True
+    f2424_typeO.Value = False
+    f2424_typePC.Value = False
+    f2424_typePK.Value = False
+    f2424_typePQ.Value = False
+    f2424_typeOex.Enabled = False
+        f2424Oex.Value = na
+    f2424PA.Value = "X"
+    Exit Sub
+End If
+If f2424Ptype = "PC" Then
+    f2424Cancel = True
+    f2424_typeO.Value = False
+    f2424_typePA.Value = False
+    f2424_typePK.Value = False
+    f2424_typePQ.Value = False
+    f2424_typeOex.Enabled = False
+        f2424Oex.Value = na
+    f2424PC.Value = "X"
+    Exit Sub
+End If
+If f2424Ptype = "PK" Then
+    f2424Cancel = True
+    f2424_typeO.Value = False
+    f2424_typePA.Value = False
+    f2424_typePC.Value = False
+    f2424_typePQ.Value = False
+    f2424_typeOex.Enabled = False
+        f2424Oex.Value = na
+    f2424PK.Value = "X"
+    Exit Sub
+End If
+If f2424Ptype = "PQ" Then
+    f2424Cancel = True
+    f2424_typeO.Value = False
+    f2424_typePA.Value = False
+    f2424_typePC.Value = False
+    f2424_typePK.Value = False
+    f2424_typeOex.Enabled = False
+        f2424Oex.Value = na
+    f2424PQ.Value = "X"
+    Exit Sub
+End If
+
+
+End Sub
+
+Private Sub f2424c_DelWarn_Click() ' 2424 config for warning upon removing Content on 2424
+
+If f2424c_DelWarn Then ' baseline config update trigger
+    f2424cDelw.Value = True
+    f2424c_DelWarn.Caption = "Mute"
+Else
+    f2424cDelw.Value = False
+    f2424c_DelWarn.Caption = "Warn"
+End If
+
+End Sub
+
+Private Sub f2424c_MNA_Click() ' 2424 config should we put ADMIN ACTION
+
+If f2424c_MNA Then
+    f2424cMNA.Value = True
+    f2424c_MNA.Caption = "N/A"
+    f2424_admin.BackColor = &H855988
+Else
+    f2424cMNA.Value = False
+    f2424c_MNA.Caption = "Available"
+    f2424_admin.BackColor = &H8000000F
+End If
+
+End Sub
+
+Private Sub f2424c_Prev_Click() ' 2424 config Inherit previous
+
+If f2424c_Prev Then
+    f2424cPrev.Value = True
+    f2424c_Prev.Caption = "Inherit"
+Else
+    f2424cPrev.Value = False
+    f2424c_Prev.Caption = "Discard"
+End If
+
+End Sub
+
+Private Sub f2424c_SSNlink_Click() ' 2424 alievate thru ALPHA
+
+' Require function of dictionary write, dictionary append and dictionary look
+
+End Sub
+
+Private Sub f2424c_StartNew_Click() ' 2424 config start a new page after print
+
+If f2424c_StartNew Then
+    f2424cStartNew.Value = True
+    f2424c_StartNew.Caption = "Enabled"
+Else
+    f2424cStartNew.Value = False
+    f2424c_StartNew.Caption = "Disabled"
+End If
+
+End Sub
+
 Private Sub Gconfig_delWarn_Click() ' GLOBAL CONFIG WARN BEFORE DELETE
 If Gconfig_delWarn Then
     config.Range("F7").Value = True
@@ -533,6 +912,17 @@ If Gconfig_delWarn Then
 Else
     config.Range("F7").Value = False
     Gconfig_delWarn.Caption = "DISABLED"
+End If
+
+Gconfig_DelOverride ' adjust override
+End Sub
+Sub Gconfig_DelOverride() ' global config to override localized warning
+If Gconfig_delWarn Then
+    f2424c_DelWarn.Enabled = False
+    f110c_delWarn.Enabled = False
+Else
+    f2424c_DelWarn.Enabled = True
+    f110c_delWarn.Enabled = True
 End If
 End Sub
 
@@ -582,6 +972,12 @@ loadGconfig
 
 End Sub
 
+Private Sub Gconfig_SSNlookup_Click() ' GCONFIG for GLOBAL FORCED SSN LOOK UP
+
+' Require function of dictionary write, dictionary append and dictionary look
+
+End Sub
+
 Private Sub hidePanel_Click()
     utilityForms.Hide
     trackerAPI.Show
@@ -603,6 +999,7 @@ Private Sub UserForm_Initialize()
 ' FIGURE WORKSHEETS
     Set F110p1 = Worksheets("DEBT.A") ' 110
     Set F110p2 = Worksheets("DEBT.B") ' 110
+    Set f2424 = Worksheets("ADV.PAY") ' 2424
     Set config = Worksheets("SENSEI.CONFIG")
 ' FIGURE DATA CONTAINER
     Set Data = Worksheets("SENSEI.DATA")
@@ -616,6 +1013,7 @@ Private Sub UserForm_Initialize()
     saveOptn = config.Range("F5").Value
 
     initialize110 ' initialize 110
+    initialize2424 ' initialize 2424
     
     loadGconfig ' GLOBAL CONFIG LOADER
 End Sub
@@ -659,6 +1057,8 @@ Sub initialize110() ' initialize 110 content
         f110c_dispFollow = Disp_Link ' update from settings
         f110c_keepMbr = config.Range("F35").Value
         f110c_inherit = config.Range("F36").Value
+    Set f110delW = config.Range("F37") ' INDIVIDUAL WARNING
+        f110c_delWarn = f110delW.Value
         
     update110Display ' 110
     f110Row = f110_RowCt.Value ' 110 - Make row Number valid
@@ -667,12 +1067,66 @@ Sub initialize110() ' initialize 110 content
     f110_ssn = ssn110.Value ' 110 LOAD SSN
 
 End Sub
+Sub initialize2424() ' 2424 intitlize all config
+f2424Cancel = True ' Disable Updates while initializing
+
+With f2424 ' ASSIGN TO RANGE
+    Set f2424amount = .Range("B9") ' AMOUNT
+    Set f2424amountF = .Range("F9") ' amount in words
+    Set f2424PA = .Range("C10")
+    Set f2424PC = .Range("G10")
+    Set f2424PK = .Range("I10")
+    Set f2424PQ = .Range("C11")
+    Set f2424O = .Range("C12")
+    Set f2424Oex = .Range("G12")
+    Set f2424Cat = .Range("B14") ' additional pay info
+    Set f2424SSN = .Range("G14")
+    Set f2424Name = .Range("B16")
+    Set f2424Rank = .Range("J16")
+    Set f2424expl = .Shapes("f2424_expl").TextFrame.Characters ' computations
+End With
+
+With config ' USED FOR CONFIG IF
+    Set f2424cDelw = .Range("F64")
+    Set f2424cStartNew = .Range("F65")
+    Set f2424cMNA = .Range("F66")
+    Set f2424cPrev = .Range("F67") ' is it enabled? the prior inherit
+    Set f2424cPrevType = .Range("F68") ' prior inherit specific type
+    Set f2424cSSNlink = .Range("F69") ' Auto SSN, suspended due to lack of The list
+End With
+
+' Load Existing Value
+' f2424_admin.BackColor = &H8000000F ' hold on to this till it was worked
+f2424_amount.Value = f2424amount.Value
+f2424_amountFig.Caption = f2424amountF.Value
+If f2424PA.Value = "X" Or (f2424cPrevType.Value = "PA" And f2424cPrev.Value = True) Then f2424_typePA.Value = True
+If f2424PC.Value = "X" Or (f2424cPrevType.Value = "PC" And f2424cPrev.Value = True) Then f2424_typePC.Value = True
+If f2424PK.Value = "X" Or (f2424cPrevType.Value = "PK" And f2424cPrev.Value = True) Then f2424_typePK.Value = True
+If f2424PQ.Value = "X" Or (f2424cPrevType.Value = "PQ" And f2424cPrev.Value = True) Then f2424_typePQ.Value = True
+If f2424O.Value = "X" Or (f2424cPrevType.Value = "PO" And f2424cPrev.Value = True) Then f2424_typeO.Value = True
+f2424_typeOex.Value = f2424Oex.Value
+f2424_mbrSSN.Value = f2424SSN.Value
+f2424_mbrName.Value = f2424Name.Value
+f2424_mbrRank.Value = f2424Rank.Value
+f2424_explain.Value = f2424expl.Text
+
+' Adjust local setting toggles
+f2424c_DelWarn.Value = f2424cDelw.Value
+f2424c_StartNew.Value = f2424cStartNew.Value
+f2424c_MNA.Value = f2424cMNA.Value
+f2424c_Prev.Value = f2424cPrev.Value
+f2424c_SSNlink.Value = f2424cSSNlink
+
+f2424Cancel = False ' Re-engage Updater
+End Sub
 
 Sub loadGconfig() ' GLOBAL Config loader
 
 Gconfig_saveOptn.Value = config.Range("F5").Value
 Gconfig_saveTo.Value = config.Range("F6").Value
 Gconfig_delWarn.Value = config.Range("F7").Value ' WARN DELETE
+Gconfig_SSNlookup.Value = config.Range("F8").Value ' GLOBAL FORCE SSN LOOKUP
+Gconfig_DelOverride ' Must handle enabling
 
 End Sub
 Sub writeSITWlist() ' 110 FX_pre, loads SITW list FOR 110
@@ -690,7 +1144,7 @@ End Sub
 Sub updateCompDebt() ' 110 FX for Summing Tax
     amountSum.Value = Format(-Round(debtTotal.Value, 2), "0.00")
 End Sub
-Sub update110Display()
+Sub update110Display() ' 110 update display
 ' 13 Lines on Page 1, 22 Lines on Page 2
 Dim defValue As String  ' Default loader
     defValue = "Entry  Period         Item     Type   Mth-Dys  P.rate    P.amount  Grade   D.rate    D.amount  Diff.       Diff.US "
@@ -813,3 +1267,4 @@ Next apLoopRw
     disp110.Value = apArray ' was defValue & apArray
     updateCompDebt ' MIGHT AS WELL UPDATE THIS
 End Sub
+
