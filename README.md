@@ -49,7 +49,7 @@ There are two methods which this could be setup and become operational on any Wi
 
 ## Update History
 
-### Sensei Main  ![UI](https://img.shields.io/badge/1.5.1-Release-76D754)
+### Sensei Main  ![UI](https://img.shields.io/badge/1.5.2-Release-76D754)
 
 <details><summary>SENSEI 1.5 - Scantrons</summary>
 <p>
