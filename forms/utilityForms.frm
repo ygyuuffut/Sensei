@@ -708,7 +708,7 @@ If Not saveOptn Or saveTo = "" Then Cpath = saveTo ' only wrote when fixed path 
 
 ' add a Mkdir, or make directory for when under constant method
     f2424.ExportAsFixedFormat xlTypePDF, _
-        Filename:=Cpath & "\2424." & Left(f110_name.Value, 5) & "." & Format(Now(), "YYMMDD-HHMMSS")
+        Filename:=Cpath & "\2424." & Left(f2424_mbrName.Value, 5) & "." & Format(Now(), "YYMMDD-HHMMSS")
     Application.StatusBar = "Form 2424 has been exported to " & Cpath
     If f2424c_StartNew Then f2424nuke
     Exit Sub
@@ -967,7 +967,7 @@ Private Sub Gconfig_saveToRemove_Click() ' Global config remove path
 Dim resB As String
     resB = MsgBox("Remove Current Path?", vbYesNo, "Distiller Path Deletion")
 If resB = vbNo Then Exit Sub
-config.Range("F6").calue = ""
+config.Range("F6").Value = ""
 loadGconfig
 
 End Sub
@@ -980,6 +980,7 @@ End Sub
 
 Private Sub hidePanel_Click()
     utilityForms.Hide
+    Application.StatusBar = False
     trackerAPI.Show
 End Sub
 
