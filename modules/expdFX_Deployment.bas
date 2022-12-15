@@ -7,6 +7,9 @@ Public Sub generateScantron() ' Generate Scan tron for Master 114
 Dim depIO As Worksheet: Set depIO = ThisWorkbook.Sheets("DEP.IO")
 Dim rData As Workbook, sh1 As Worksheet, sh2 As Worksheet, _
     sh3 As Worksheet, sh4 As Worksheet, shx As Worksheet ' raw data and worksheets
+Dim config As Worksheet: Set config = ThisWorkbook.Sheets("SENSEI.CONFIG")
+Dim dOption As Boolean: dOption = config.Range("J4").Value ' not use omega date?
+
 Dim baseLine As Long, ssnBegin As Long ' last row for raw data, SSN START LINE
 Dim iv As Long, ix As Long ' used to loop thru worksheets
 Dim flag14 As Boolean, flagFL As Boolean, flag23 As Boolean, flag65 As Boolean
@@ -22,7 +25,16 @@ Dim ssnDict14 As Dictionary: Set ssnDict14 = New Scripting.Dictionary ' SSN to 1
 Dim ssnDict23 As Dictionary: Set ssnDict23 = New Scripting.Dictionary ' SSN to 23
 Dim ssnDict65 As Dictionary: Set ssnDict65 = New Scripting.Dictionary ' SSN to 65
 Dim tempA() As Variant, ib As Long: ib = 0 ' dictionary Index Transpose
-Dim zDate: zDate = Format(Now() - 180, "YYYY-MM-DD") ' TODAY IN yyyy-mm-dd
+
+' Day Count Lib, w, x, y, z according to FL, 14, 23, 65 Micro adjusting date
+Dim wDate: wDate = Format(Now() - config.Range("J6").Value, "YYYY-MM-DD")
+Dim xDate: xDate = Format(Now() - config.Range("J7").Value, "YYYY-MM-DD")
+Dim yDate: yDate = Format(Now() - config.Range("J8").Value, "YYYY-MM-DD")
+Dim zDate: zDate = Format(Now() - config.Range("J9").Value, "YYYY-MM-DD")
+Dim omegaDate: omegaDate = Format(Now() - config.Range("J5").Value, "YYYY-MM-DD") ' TODAY IN yyyy-mm-dd < Using
+
+' date separator for 65
+Dim zx, zy
 
 Dim ssnL ' temporary SSN
 Dim rawdata: rawdata = Application.GetOpenFilename("Pay Entitlements~ .xls (*.xls; *.xlsx),*.xls;*.xlsx", , "Select Raw Deployment Data", "Generate", False)
@@ -44,13 +56,13 @@ Set rData = Workbooks.Open(rawdata) ' appoint data card and find first sheet's l
         Set rData = Workbooks.Open(rawdata)
     Loop
 
-baseLine = depIO.Cells.Find("*", SearchOrder:=xlByRows, searchDirection:=xlPrevious).Row
+baseLine = depIO.Cells.Find("*", SEARCHORDER:=xlByRows, searchDirection:=xlPrevious).Row
 depIO.Range("A2:L" & baseLine).ClearContents ' get rid of old information
 
 For iv = 1 To 4 ' go thru all 4 sheets and build the reference table
     ' KNOW WHERE TO START AND STOP
-    baseLine = rData.Sheets(iv).Cells.Find("*", SearchOrder:=xlByRows, searchDirection:=xlPrevious).Row
-    ssnBegin = rData.Sheets(iv).Cells.Find("SSN", SearchOrder:=xlByRows, searchDirection:=xlAfter).Row + 1
+    baseLine = rData.Sheets(iv).Cells.Find("*", SEARCHORDER:=xlByRows, searchDirection:=xlPrevious).Row
+    ssnBegin = rData.Sheets(iv).Cells.Find("SSN", SEARCHORDER:=xlByRows, searchDirection:=xlAfter).Row + 1
     Set shx = rData.Sheets(iv) ' lock into variable
     
     With shx.Columns("B:B") ' Deformat SSN back to number
@@ -74,41 +86,48 @@ Next iv
 ' Second iteration to physically record what is missing
 For iv = 1 To 4
     ' KNOW WHERE TO START AND STOP
-    baseLine = rData.Sheets(iv).Cells.Find("*", SearchOrder:=xlByRows, searchDirection:=xlPrevious).Row
-    ssnBegin = rData.Sheets(iv).Cells.Find("SSN", SearchOrder:=xlByRows, searchDirection:=xlAfter).Row + 1
+    baseLine = rData.Sheets(iv).Cells.Find("*", SEARCHORDER:=xlByRows, searchDirection:=xlPrevious).Row
+    ssnBegin = rData.Sheets(iv).Cells.Find("SSN", SEARCHORDER:=xlByRows, searchDirection:=xlAfter).Row + 1
     Set shx = rData.Sheets(iv) ' lock into variable
-
+    
+    ' Ensure the formatting based on entitlements (What are we looking at?)
+    If shx.Range("B5").Value <> "" And shx.Range("B4").Value = "" Then ' if title is on B5, check B5
+        If shx.Range("B5").Value Like "*Combat Zone Tax*" Then
+            flagFL = True
+        ElseIf shx.Range("B5").Value Like "*Family Separation*" Then
+            flag65 = True
+        ElseIf shx.Range("B5").Value Like "*Hardship Duty*" Then
+            flag14 = True
+        ElseIf shx.Range("B5").Value Like "*Hostile Fire*" Then
+            flag23 = True
+        End If
+    Else ' else check B4
+        If shx.Range("B4").Value Like "*Combat Zone Tax*" Then
+            flagFL = True
+        ElseIf shx.Range("B4").Value Like "*Family Separation*" Then
+            flag65 = True
+        ElseIf shx.Range("B4").Value Like "*Hardship Duty*" Then
+            flag14 = True
+        ElseIf shx.Range("B4").Value Like "*Hostile Fire*" Then
+            flag23 = True
+        End If
+    End If
+    
     For ix = ssnBegin To baseLine ' Now match record, if found then wrote entry at current row
         ssnL = shx.Range("B" & ix).Value
         If ssnL <> "" Then
             If ssnDict.Exists(ssnL) Then ' detect and write
             
-                ' Ensure the formatting based on entitlements
-                If shx.Range("B5").Value <> "" And shx.Range("B4").Value = "" Then ' if title is on B5, check B5
-                    If shx.Range("B5").Value Like "*Combat Zone Tax*" Then
-                        flagFL = True
-                    ElseIf shx.Range("B5").Value Like "*Family Separation*" Then
-                        flag65 = True
-                    ElseIf shx.Range("B5").Value Like "*Hardship Duty*" Then
-                        flag14 = True
-                    ElseIf shx.Range("B5").Value Like "*Hostile Fire*" Then
-                        flag23 = True
-                    End If
-                Else ' else check B4
-                    If shx.Range("B4").Value Like "*Combat Zone Tax*" Then
-                        flagFL = True
-                    ElseIf shx.Range("B4").Value Like "*Family Separation*" Then
-                        flag65 = True
-                    ElseIf shx.Range("B4").Value Like "*Hardship Duty*" Then
-                        flag14 = True
-                    ElseIf shx.Range("B4").Value Like "*Hostile Fire*" Then
-                        flag23 = True
+                If flagFL And Not dOption Then ' do fl IF OLDER THAN or euqal omegaDate
+                    If Not Format(shx.Range("L" & ix).Value, "YYYY-MM-DD") > omegaDate Then
+                        If ssnDictFL.Exists(ssnL) Then ' see if FL dictionary has entry
+                        Else ' LOAD IT TO FL DICTIONARY
+                            ssnDictFL.Add ssnL, "X"
+                        End If
                     End If
                 End If
-                
-                
-                If flagFL Then ' do fl IF OLDER THAN OR EQUAL TO 180 DAY
-                    If Not Format(shx.Range("L" & ix).Value, "YYYY-MM-DD") > zDate Then
+                If flagFL And dOption Then ' do fl IF OLDER THAN or euqal wDate
+                    If Not Format(shx.Range("L" & ix).Value, "YYYY-MM-DD") > wDate Then
                         If ssnDictFL.Exists(ssnL) Then ' see if FL dictionary has entry
                         Else ' LOAD IT TO FL DICTIONARY
                             ssnDictFL.Add ssnL, "X"
@@ -116,8 +135,16 @@ For iv = 1 To 4
                     End If
                 End If
                 
-                If flag14 Then ' do 14 IF OLDER THAN OR EQUAL TO 180 DAY
-                    If Not Format(shx.Range("L" & ix).Value, "YYYY-MM-DD") > zDate Then
+                If flag14 And Not dOption Then ' do 14 IF OLDER THAN or euqal omegaDate
+                    If Not Format(shx.Range("L" & ix).Value, "YYYY-MM-DD") > omegaDate Then
+                        If ssnDict14.Exists(ssnL) Then ' see if 14 dictionary has entry
+                        Else ' LOAD IT TO 14 DICTIONARY
+                            ssnDict14.Add ssnL, "X"
+                        End If
+                    End If
+                End If
+                If flag14 And dOption Then ' do 14 IF OLDER THAN or euqal xDate
+                    If Not Format(shx.Range("L" & ix).Value, "YYYY-MM-DD") > xDate Then
                         If ssnDict14.Exists(ssnL) Then ' see if 14 dictionary has entry
                         Else ' LOAD IT TO 14 DICTIONARY
                             ssnDict14.Add ssnL, "X"
@@ -125,8 +152,17 @@ For iv = 1 To 4
                     End If
                 End If
                 
-                If flag23 Then ' do 23 IF OLDER THAN OR EQUAL TO 180 DAY
-                    If Not Format(shx.Range("R" & ix).Value, "YYYY-MM-DD") > zDate Then
+                
+                If flag23 And Not dOption Then ' do 23 IF OLDER THAN or euqal omegaDate
+                    If Not Format(shx.Range("R" & ix).Value, "YYYY-MM-DD") > omegaDate Then
+                        If ssnDict23.Exists(ssnL) Then ' see if 23 dictionary has entry
+                        Else ' LOAD IT TO 23 DICTIONARY
+                            ssnDict23.Add ssnL, "X"
+                        End If
+                    End If
+                End If
+                If flag23 And dOption Then ' do 23 IF OLDER THAN or euqal yDate
+                    If Not Format(shx.Range("R" & ix).Value, "YYYY-MM-DD") > yDate Then
                         If ssnDict23.Exists(ssnL) Then ' see if 23 dictionary has entry
                         Else ' LOAD IT TO 23 DICTIONARY
                             ssnDict23.Add ssnL, "X"
@@ -134,8 +170,17 @@ For iv = 1 To 4
                     End If
                 End If
                 
-                If flag65 Then ' do 65 IF OLDER THAN OR EQUAL TO 180 DAY
-                    Dim zx, zy
+                If flag65 And Not dOption Then ' do 65 IF OLDER THAN or euqal omegaDate
+                    zx = shx.Range("O" & ix).Value ' RECOMPOSE DATE
+                    zy = Format(DateSerial(CInt(Left(zx, 2)), CInt(Mid(zx, 3, 2)), CInt(Right(zx, 2))), "YYYY-MM-DD")
+                    If Not zy > omegaDate Then
+                        If ssnDict65.Exists(ssnL) Then ' see if 65 dictionary has entry
+                        Else ' LOAD IT TO 65 DICTIONARY
+                            ssnDict65.Add ssnL, "X"
+                        End If
+                    End If
+                End If
+                If flag65 And dOption Then ' do 65 IF OLDER THAN or euqal zDate
                     zx = shx.Range("O" & ix).Value ' RECOMPOSE DATE
                     zy = Format(DateSerial(CInt(Left(zx, 2)), CInt(Mid(zx, 3, 2)), CInt(Right(zx, 2))), "YYYY-MM-DD")
                     If Not zy > zDate Then
@@ -145,6 +190,7 @@ For iv = 1 To 4
                         End If
                     End If
                 End If
+                
                 
             Else
             End If
@@ -254,7 +300,7 @@ Next ba
 ' CLEAN THE REPORT UP and formulate it
 depIO.Columns("A:A").NumberFormat = "000000000"
 With depIO
-    baseLine = .Cells.Find("*", SearchOrder:=xlByRows, searchDirection:=xlPrevious).Row
+    baseLine = .Cells.Find("*", SEARCHORDER:=xlByRows, searchDirection:=xlPrevious).Row
     .Range("I2").Formula = "=IF(AND($K2<>"""",$F2<>""""),$H2-1,"""")"
     .Range("J2").Formula = "=IF(AND($K2<>"""",$C2<>""""),EOMONTH($G2,0),"""")"
     .Range("I2:I" & baseLine).FillDown

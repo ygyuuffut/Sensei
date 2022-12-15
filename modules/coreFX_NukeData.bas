@@ -4,6 +4,9 @@ Public config As Worksheet, ecsp As Worksheet, acsp As Worksheet, f110a As Works
     depIO As Worksheet, f2424 As Worksheet
 Public cspRng As Range, f110aRng As Range, f110aRng0 As Range, f110bRng As Range
 Public f110bRng0 As Range, f2424Rng As Range, f2424expl As Object
+Const cEnd = 302 ' last row
+Const cCap = 300 ' capacity
+
 Sub Initialize()
 
 Set config = ThisWorkbook.Worksheets("SENSEI.CONFIG") ' Unified Config Sheet
@@ -14,7 +17,7 @@ Set f110b = ThisWorkbook.Worksheets("DEBT.B")
 Set depIO = ThisWorkbook.Worksheets("DEP.IO") ' nuke dep io as well
 Set f2424 = ThisWorkbook.Worksheets("ADV.PAY")
 
-Set cspRng = Union(ecsp.Range("C3:D102"), ecsp.Range("F3:H102"), ecsp.Range("J3:K102"))
+Set cspRng = Union(ecsp.Range("C3:D" & cEnd), ecsp.Range("F3:H" & cEnd), ecsp.Range("J3:M" & cEnd))
 Set f2424Rng = Union(f2424.Range("B9"), f2424.Range("F9"), f2424.Range("C10"), f2424.Range("C11"), _
                     f2424.Range("C12"), f2424.Range("G10"), f2424.Range("G12"), f2424.Range("I10"), _
                     f2424.Range("B14"), f2424.Range("G14"), f2424.Range("B16"), f2424.Range("J16"))
@@ -36,8 +39,8 @@ Application.ScreenUpdating = False
 Dim aRow As Long
 
 Initialize
-aRow = acsp.Cells.Find("*", SearchOrder:=xlByRows, searchDirection:=xlPrevious).Row
-acsp.Range("C3:L" & aRow).ClearContents
+aRow = acsp.Cells.Find("*", SEARCHORDER:=xlByRows, searchDirection:=xlPrevious).Row
+acsp.Range("C3:N" & aRow).ClearContents
 cspRng.ClearContents
 f110aRng.ClearContents
 f110aRng0.Value = 0
@@ -57,6 +60,10 @@ With config
     .Range("D9:D11").Value = 2 ' D9 (1-ZH, 2-EN), all others (2 - off)
     .Range("D13").Value = False ' Pull 2 Excel Cards for Dual Update of entires
     .Range("D14").Value = 0 ' Reset Dual Update warning to enabled
+    .Range("D23").Value = False ' TURN OFF AUTOSAVE
+    .Range("D24").Value = 0 ' RESET ACTION COUNTER
+    .Range("D25").Value = 25 ' RESET ACTION CAP
+    .Range("D26").Value = "D" ' SET TYPE TO CSP
     ' Form Distiller General Setting
     .Range("F5").Value = False ' Reset Distiller to variable locations (appoint per time)
     .Range("F6").Value = "" ' Reset Distiller Fixed Export Path
@@ -65,6 +72,11 @@ With config
     .Range("F64:F67").Value = False ' 2424 - CONFIG GROUP
     .Range("F68").Value = "" ' 2424
     .Range("F69").Value = False
+    ' Deployment Scantron Settings
+    .Range("J4").Value = False ' Resume to unified standard
+    .Range("J5:J9").Value = 180 ' SET ALL DATES BACK TO 180
+    .Range("J10").Value = False
+    .Range("J11").Value = ""
 End With
 
 Application.ScreenUpdating = True
