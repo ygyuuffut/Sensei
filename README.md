@@ -3,12 +3,14 @@
 ![Version](https://img.shields.io/badge/Version-1.5.2-76D754?style=flat-square)
 ![Version Type](https://img.shields.io/badge/Type-Release--01-16A085?style=flat-square)
 ![Language](https://img.shields.io/badge/Language-Virtual%20Basic-EB984E?style=flat-square)
+![Lines of code](https://img.shields.io/tokei/lines/github.com/ygyuuffut/Sensei?style=flat-square)
 
 A very much scatter-mind driven programming that develops as demands emerges
 
 ## Table of Contents
 - [SENSEI - A Clustered Applets for Excel](#sensei---a-clustered-applets-for-excel)
 	- [Table of Contents](#table-of-contents)
+	- [Supported Platforms](#supported-platforms)
 	- [Structure Guidances](#structure-guidances)
 	- [Installations](#installations)
 		- [Manual Composition](#manual-composition)
@@ -22,6 +24,8 @@ A very much scatter-mind driven programming that develops as demands emerges
 		- [Sensei CE - Coding Engine](#sensei-ce---coding-engine-)
 
 
+## Supported Platforms
+**Microsoft Office** - 2016 (64 bit) or later, recommended for Office 365 (64 bit) on Windows 7 or later
 
 ## Structure Guidances
 
@@ -49,10 +53,29 @@ There are two methods which this could be setup and become operational on any Wi
 
 ## Update History
 
-### Sensei Main  ![UI](https://img.shields.io/badge/1.5.2-Release-76D754)
+### Sensei Main  ![UI](https://img.shields.io/badge/1.5.7-Release-76D754)
 
 <details><summary>SENSEI 1.5 - Scantrons</summary>
 <p>
+
+![](https://img.shields.io/badge/1.5.7-424949?style=flat-square)
+- Additional Support to display Private information upon request
+- Added Support to Misc. entry type
+
+![](https://img.shields.io/badge/1.5.6-424949?style=flat-square)
+- Depreciated Reset Function and Replaced with Save and Quit
+
+![](https://img.shields.io/badge/1.5.5-424949?style=flat-square)
+- Introduced primitive auto-save function
+- Nuke Module is updated to accomodate latest configurations
+- Introduced primitive blocking for trust warning upon saving
+
+![](https://img.shields.io/badge/1.5.4-424949?style=flat-square)
+- Eliminated Ambiguity in Form tab, altered naming convention for accessibility
+
+![](https://img.shields.io/badge/1.5.3-424949?style=flat-square)
+- Main Holder Capacity increased to 300
+- Added 1 Additional Amending Type (CMS)
 
 ![](https://img.shields.io/badge/1.5.2-424949?style=flat-square)
 - Bumped due to Distiller Update
@@ -105,12 +128,15 @@ There are two methods which this could be setup and become operational on any Wi
 </p>
 </details>
 
-### Sensei FD - Form Distiller ![CL](https://img.shields.io/badge/1.1.0-Release-76D754)
+### Sensei FD - Form Distiller ![CL](https://img.shields.io/badge/1.2.0-Release-76D754)
 <details><summary>FD 1.0 - Distilling Forms</summary>
 <p>
 
+![](https://img.shields.io/badge/1.2.0-424949?style=flat-square)
+- Added Support to Form 2424
+
 ![](https://img.shields.io/badge/1.1.0-424949?style=flat-square)
-  - Additional Controlls for Form 110
+- Additional Controlls for Form 110
 
 ![](https://img.shields.io/badge/1.0.0-424949?style=flat-square)
 - SENSEI Form Distller introduction
@@ -121,9 +147,17 @@ There are two methods which this could be setup and become operational on any Wi
 </p>
 </details>
 
-### Sensei DS - Deployee Scantron ![CL](https://img.shields.io/badge/1.0.1-Release-76D754)
+### Sensei DS - Data Scantron ![CL](https://img.shields.io/badge/1.2.0-Release-76D754)
 <details><summary>DS 1.0 - Data Handler</summary>
 <p>
+
+![](https://img.shields.io/badge/1.2.0-424949?style=flat-square)
+- Overhaul of elements for future expandibility
+
+![](https://img.shields.io/badge/1.1.0-424949?style=flat-square)
+- Changed naming convention for expandibility
+- Added Total Count whenever completed data loading
+- Enabled Global Printing Config
 
 ![](https://img.shields.io/badge/1.0.1-424949?style=flat-square)
 - Optimized Function handling speed
