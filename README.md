@@ -3,7 +3,7 @@
 ![Version](https://img.shields.io/badge/Version-1.5.2-76D754?style=flat-square)
 ![Version Type](https://img.shields.io/badge/Type-Release--01-16A085?style=flat-square)
 ![Language](https://img.shields.io/badge/Language-Virtual%20Basic-EB984E?style=flat-square)
-![Size](https://img.shields.io/github/languages/code-size/ygyuuffut/Sensei)
+![Size](https://img.shields.io/github/languages/code-size/ygyuuffut/Sensei?style=flat-square)
 
 A very much scatter-mind driven programming that develops as demands emerges
 
