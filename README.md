@@ -53,7 +53,7 @@ There are two methods which this could be setup and become operational on any Wi
 
 ## Update History
 
-### Sensei Main  ![UI](https://img.shields.io/badge/1.5.7-Release-76D754)
+### Sensei Main  ![UI](https://img.shields.io/badge/1.6.0-Release-76D754)
 
 <details><summary>SENSEI 1.6 - Historian</summary>
 <p>
