@@ -2134,8 +2134,8 @@ returnSrch:
                 GoTo returnSSF
             End If
             
-            If searchType = "D" And SrchTp = 0 And _
-              InStr(Range("C" & Srch.Row).Value, "-") = 0 Then
+            If searchType = "D" And SrchTp <> 0 And _
+              InStr(Range("C" & Srch.Row).Value, "-") <> 11 Then
                 If formEditSSFx <> 0 And (formEditSSFx < 6) And _
                   InStr(tSerial, "CSP#" & formEditSSFx) = 0 Then ' STAGE X CSP DNE EXIT
                     Set Srch = Nothing
