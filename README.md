@@ -1,6 +1,6 @@
 # SENSEI - A Clustered Applets for Excel
 ![License](https://img.shields.io/badge/License-AGPL%203-BB8FCE?style=flat-square)
-![Version](https://img.shields.io/badge/Version-1.5.7-76D754?style=flat-square)
+![Version](https://img.shields.io/badge/Version-1.6.0-76D754?style=flat-square)
 ![Version Type](https://img.shields.io/badge/Type-Release--01-16A085?style=flat-square)
 ![Language](https://img.shields.io/badge/Language-Virtual%20Basic-EB984E?style=flat-square)
 ![Size](https://img.shields.io/github/languages/code-size/ygyuuffut/Sensei?style=flat-square)
@@ -16,7 +16,7 @@ A very much scatter-mind driven programming that develops as demands emerges
 		- [Manual Composition](#manual-composition)
 		- [Alternative Method](#alternative-method)
 	- [Update History](#update-history)
-		- [Sensei Main  !UI](#sensei-main--)
+		- [Sensei Main UI](#sensei-main--)
 		- [Sensei Link - Document Network](#sensei-link---document-network-)
 		- [Sensei FD - Form Distiller](#sensei-fd---form-distiller-)
 		- [Sensei DS - Deployee Scantron](#sensei-ds---deployee-scantron-)
@@ -54,6 +54,28 @@ There are two methods which this could be setup and become operational on any Wi
 ## Update History
 
 ### Sensei Main  ![UI](https://img.shields.io/badge/1.5.7-Release-76D754)
+
+<details><summary>SENSEI 1.6 - Historian</summary>
+<p>
+
+![](https://img.shields.io/badge/1.6.0-424949?style=flat-square)
+- Added limited search based on stage
+- Amended Limted search into compound search
+- Changed how MISC type is recorded
+- Modified Edit Panel Commentary display method
+- Repaired where Edit Panel Loads SSID incorrectly (0 header)
+- Repaired Capacity Display
+- Repaired Config Incorrect Loading
+- Repaired Incomplete Erase
+- Repaired Formula Self-Fixuture issue
+- Repaired Document Export Leakage issue
+- Add Dash Board to view historical Performances when disgnated a time frame (or all time if blank)
+- Separate CSP and CMS Benchmarks on dashboards
+- Allow Re-count based on Current Archive
+- Enable other pages tap into auto save data
+
+</p>
+</details>
 
 <details><summary>SENSEI 1.5 - Scantrons</summary>
 <p>
