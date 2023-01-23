@@ -1,6 +1,6 @@
 VERSION 5.00
 Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} utilityForms 
-   Caption         =   "Sensei Debt Computation"
+   Caption         =   "Sensei Form Distiller"
    ClientHeight    =   7680
    ClientLeft      =   120
    ClientTop       =   465
@@ -236,6 +236,7 @@ update110Display
 End Sub
 
 Private Sub f110_export_Click() ' 110 export function, add support for fixed directory
+globalSave
 Dim saveToPrompt
 Dim Cpath As String: Cpath = na ' current path contains no name
 Dim Cexist As String
@@ -249,7 +250,7 @@ If Not saveOptn Or saveTo = "" Then ' ALWAYS PROMPT IF DISABLED PATHWAY OR SAVET
         .ButtonName = "Save"
         .AllowMultiSelect = False
         .InitialFileName = Application.DefaultFilePath
-        If .Show <> -1 Then GoTo exportForm
+        If .Show = 0 Then Exit Sub ' if cancelled exit immediately
         saveTo = .SelectedItems(1)
     End With
 Else
@@ -297,6 +298,7 @@ End Sub
 
 Private Sub f110_inherit_Click() ' 110 Inherit from previous Entry
     f110rowDispInherit ' inherit function
+    globalSave
 End Sub
 
 Private Sub f110_itemGrade_Change() ' 110 GRADE/YEAR
@@ -621,6 +623,7 @@ End Sub
 
 Private Sub f2424_delall_Click() ' 2424 nuke the form
 f2424nuke
+globalSave
 End Sub
 
 Sub f2424nuke() ' 2424 Delete file
@@ -651,6 +654,7 @@ f2424_mbrSSN.Value = na
 f2424_mbrRank.Value = na
 f2424_mbrName.Value = na
 f2424_explain.Value = na
+f2424.Range("B23").Value = na
 
 If f2424c_Prev Then ' adapt the prior transaction type
     f2424Ptype = f2424cPrevType.Value
@@ -671,6 +675,7 @@ End Sub
 
 
 Private Sub f2424_export_Click() ' 2424 Export, now support fixed directory
+globalSave
 Dim saveToPrompt
 Dim Cpath As String: Cpath = na ' current path contains no name
 Dim Cexist As String
@@ -684,7 +689,7 @@ If Not saveOptn Or saveTo = "" Then ' ALWAYS PROMPT IF DISABLED PATHWAY OR SAVET
         .ButtonName = "Save"
         .AllowMultiSelect = False
         .InitialFileName = Application.DefaultFilePath
-        If .Show <> -1 Then GoTo exportForm
+        If .Show = 0 Then Exit Sub ' if cancelled exit immediately
         saveTo = .SelectedItems(1)
     End With
 Else
@@ -866,10 +871,12 @@ Private Sub f2424c_MNA_Click() ' 2424 config should we put ADMIN ACTION
 If f2424c_MNA Then
     f2424cMNA.Value = True
     f2424c_MNA.Caption = "N/A"
+    f2424.Range("B23").Value = "M.N.A."
     f2424_admin.BackColor = &H855988
 Else
     f2424cMNA.Value = False
     f2424c_MNA.Caption = "Available"
+    f2424.Range("B23").Value = ""
     f2424_admin.BackColor = &H8000000F
 End If
 
@@ -915,6 +922,7 @@ Else
 End If
 
 Gconfig_DelOverride ' adjust override
+globalSave
 End Sub
 Sub Gconfig_DelOverride() ' global config to override localized warning
 If Gconfig_delWarn Then
@@ -942,6 +950,7 @@ Else ' OR NOT
     Gconfig_saveToAssign.Enabled = False
     Gconfig_saveToRemove.Enabled = False
 End If
+globalSave
 End Sub
 
 Private Sub Gconfig_saveToAssign_Click() ' global config assign path
@@ -960,6 +969,7 @@ datawrite:
 Set tempFinder = Nothing
 config.Range("F6").Value = tempPath
 loadGconfig
+globalSave
 
 End Sub
 
@@ -969,6 +979,7 @@ Dim resB As String
 If resB = vbNo Then Exit Sub
 config.Range("F6").Value = ""
 loadGconfig
+globalSave
 
 End Sub
 
@@ -982,6 +993,7 @@ Private Sub hidePanel_Click()
     utilityForms.Hide
     Application.StatusBar = False
     trackerAPI.Show
+    globalSave
 End Sub
 
 
@@ -1061,11 +1073,11 @@ Sub initialize110() ' initialize 110 content
     Set f110delW = config.Range("F37") ' INDIVIDUAL WARNING
         f110c_delWarn = f110delW.Value
         
-    update110Display ' 110
     f110Row = f110_RowCt.Value ' 110 - Make row Number valid
     f110rowDispUpdate ' 110 - UPDATE FIELD
     f110_name.Value = name110.Value ' 110 LOAD NAME
     f110_ssn = ssn110.Value ' 110 LOAD SSN
+    update110Display ' 110
 
 End Sub
 Sub initialize2424() ' 2424 intitlize all config

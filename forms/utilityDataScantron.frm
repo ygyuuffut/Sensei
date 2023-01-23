@@ -18,6 +18,7 @@ Public config As Worksheet, pCard As Worksheet
 Public lastR As Long, currR As Long
 Public m114 As Workbook, sensei As Workbook
 Public prntIt As String
+Public na As String
 Public Tholder, Uholder, Vholder, Wholder, Xholder ' to temporary held value for setting reversion
 
 Sub updateDsDisp() ' read only information' Dep Scantron
@@ -66,6 +67,9 @@ Sub updateDsDisp() ' read only information' Dep Scantron
     Else
         dsCdOmit.Caption = "O"
     End If
+    ' UPDATE DISP
+    lastR = pCard.Cells.Find("*", SEARCHORDER:=xlByRows, searchDirection:=xlPrevious).Row
+    DsCountLbl.Caption = Format(lastR - 1, "000") & " ENTRIES TOTAL"
 End Sub
 Private Sub dsCaOmit_Click() ' TOGGLE OMIT' Dep Scantron
     If pCard.Range("L" & currR).Value Like "*OMIT*" Then
@@ -74,6 +78,7 @@ Private Sub dsCaOmit_Click() ' TOGGLE OMIT' Dep Scantron
         pCard.Range("L" & currR).Value = "OMIT. on " & Format(Now(), "YYMMDD-HH:MM:SS")
     End If
     updateDsDisp
+    globalSave
 End Sub
 
 Private Sub dsCrow_DblClick(ByVal Cancel As MSForms.ReturnBoolean) ' Dep Scantron
@@ -259,6 +264,7 @@ Else
     Wholder = vbNullString
     Xholder = vbNullString
 End If
+globalSave
 End Sub
 
 Private Sub dsDateUniAdj_SpinDown() ' Dep Scantron
@@ -308,6 +314,7 @@ Else ' OR NOT
     dsPrintPathAssign.Enabled = False
     dsPrintPathRemove.Enabled = False
 End If
+globalSave
 End Sub
 
 Private Sub dsPrintPathAssign_Click() ' assign a path
@@ -327,6 +334,7 @@ Set tempFinder = Nothing
 config.Range("J11").Value = tempPath
 
 initializeConfig
+globalSave
 End Sub
 
 Private Sub dsPrintPathRemove_Click() ' remove a path
@@ -335,17 +343,20 @@ Dim resB As String
 If resB = vbNo Then Exit Sub
 config.Range("J11").Value = ""
 initializeConfig
+globalSave
 End Sub
 
 Private Sub dsRun_Click()
     MsgBox "Due to policy config, this is not quite plausible at the moment..." & vbNewLine & vbNewLine & "Please goto 114 and use DEP.IO there instead"
     Exit Sub
     readScantron ' UNABLE DUE TO POLICY
+    globalSave
 End Sub
 
 Private Sub dsCaNG_Click()
     pCard.Range("K" & currR).Value = ""
     updateDsDisp
+    globalSave
 End Sub
 Private Sub dsCaOK_Click() ' CANNOT MARK EMPTY ENTRY
     pCard.Range("K" & currR).Value = "O"
@@ -353,6 +364,7 @@ Private Sub dsCaOK_Click() ' CANNOT MARK EMPTY ENTRY
         If pCard.Range("G" & currR).Value = "" Or pCard.Range("H" & currR).Value = "" Then pCard.Range("K" & currR).Value = ""
     End If
     updateDsDisp
+    globalSave
 End Sub
 
 Private Sub dsCarrD_Change() ' Dep Scantron
@@ -384,6 +396,7 @@ pCard.Visible = xlSheetHidden
 Me.Hide
     'saveThis
 trackerAPI.Show
+globalSave
 End Sub
 
 Private Sub loadScantron_Click() ' generate the scantron and write last row' Dep Scantron
@@ -391,11 +404,13 @@ Private Sub loadScantron_Click() ' generate the scantron and write last row' Dep
     lastR = pCard.Cells.Find("*", SEARCHORDER:=xlByRows, searchDirection:=xlPrevious).Row
     updateDsDisp
     MsgBox "Data Loaded", vbOKOnly, "Sensei Scantron"
+    globalSave
 End Sub
 
 Private Sub printDsScantron_Click() ' Print for Deployment Scantron
     prntIt = "DEPLOY"
     directPrint
+    globalSave
 End Sub
 
 Sub directPrint() ' General Printing Prompt
@@ -413,7 +428,7 @@ If Not dsPrintOptn Or saveTo = "" Then ' ALWAYS PROMPT IF DISABLED PATHWAY OR SA
         .ButtonName = "Save"
         .AllowMultiSelect = False
         .InitialFileName = Application.DefaultFilePath
-        If .Show <> -1 Then GoTo exportForm
+        If .Show = 0 Then Exit Sub ' if cancelled exit immediately
         saveTo = .SelectedItems(1)
     End With
 Else
@@ -435,7 +450,7 @@ End If
 
 exportForm:
 Set saveToPrompt = Nothing ' UNLOAD OBJECT >>Does not save any way ?
-If Not saveOptn Or saveTo = "" Then Cpath = saveTo  ' only wrote when fixed path is not activated
+If Not dsPrintOptn Or saveTo = "" Then Cpath = saveTo  ' only wrote when fixed path is not activated
 
 ' add a Mkdir, or make directory for when under constant method
 If prntIt = "DEPLOY" Then
@@ -455,6 +470,7 @@ Private Sub ResetDs_Click() ' wipe Dep scantron
 Dim qa As String: qa = MsgBox("Wipe Scantron?", vbYesNo, "Wipe Scantron")
     If qa = vbYes Then pCard.Range("A2:l9999").ClearContents
     updateDsDisp
+    globalSave
 End Sub
 
 Private Sub UserForm_Initialize()
@@ -542,6 +558,7 @@ Else ' OR NOT
     dsPrintPathRemove.Enabled = False
 End If
 
+na = vbNullString
 
 End Sub
 

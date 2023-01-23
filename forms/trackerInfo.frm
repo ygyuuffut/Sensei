@@ -17,4 +17,5 @@ Private Sub euaConsent_Click()
 Worksheets("SENSEI.CONFIG").Range("D2").Value = 1
 Unload trackerInfo
 trackerAPI.Show
+globalSave
 End Sub

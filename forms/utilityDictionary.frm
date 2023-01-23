@@ -200,11 +200,13 @@ Else
     BAQnotifyD.Visible = True
     BAQexplain.Visible = True
 End If
+    globalSave
 End Sub
 
 Private Sub hidePanel_Click() ' FORM.HIDE
     utilityDictionary.Hide
     trackerAPI.Show
+    globalSave
 End Sub
 
 Private Sub Lib_Change()
@@ -353,6 +355,7 @@ Private Sub ReverseADSN_Click() ' ADSN.REVERSE.DISPLAY
         resultIn.Caption = "Results for ADSN Lookup"
         srchIn.Caption = "Searching with Location"
     End If
+    globalSave
 End Sub
 
 
@@ -365,6 +368,7 @@ Else
     ReverseCountry.Caption = "Country"
     DEPlabel.Caption = "Input Country Here:"
 End If
+globalSave
 End Sub
 
 Private Sub UserForm_Initialize() ' FORM.INITIALIZE
@@ -944,7 +948,6 @@ If BAQ3_0 Then
     BAQ4S.Enabled = False
     BAQ4T.Enabled = False
     BAQ4W.Enabled = False
-    BAQ4I.Enabled = False
 End If
 If BAQ3_1 Then
     BAQ4I.Enabled = False
