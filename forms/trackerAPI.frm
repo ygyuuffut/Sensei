@@ -45,6 +45,7 @@ Public isOnAppendSort As Boolean
 ' Search Lib
 Public searchDirection As Boolean, searchEdit As Boolean, searchShield As Boolean
 Public srchObj As String, srchResult As String, searchType As String ' type used for CSP/CMS/MISC/ALL
+Public srchProtect As Boolean
 ' Archive Lib
 Public Mfloater As Range, Afloater As Range, AchLimit As Range, ACsht As Worksheet ' SENSEI(CSP.ACH)
 ' Migration Lib, c FOR csp; s FOR sensei
@@ -165,10 +166,17 @@ End If
 
 If formAppendAutoSort.Value = True Then
     Call SDT
+    srchProtect = True
+
     sortFlag = 1
-    isOnAppendSort = True
-    Call postActionSeries
+    editSorted = 1
     Call sortCaseMaster
+    
+    searchDirection = True
+    formEditRowDisp.Value = "" ' TRIGGER WIPE
+    RenewLookForEntry
+
+    srchProtect = False
     Call RDT
 Else
     isOnAppendSort = False
@@ -651,6 +659,7 @@ If nukeClear = vbOK Then
 End If
 
 update_Occupacy
+updateRecord ' wipe record
 debugNotice = debugHH & "[MASTER] Reset to Factory Setting"
 RDT
 
@@ -729,7 +738,7 @@ For Each updaterTar In EWPxcell.Worksheets(1).Range("A2:A" & updaterLine + 1)
                     If trackerEnd.Value = "" Then
                         .Range("C" & trackerEnd.Row).Value = Left(updaterTar.Value, 18)
                         .Range("D" & trackerEnd.Row).Value = 1
-                        .Range("J" & trackerEnd.Row).Value = "New Entry"
+                        .Range("J" & trackerEnd.Row).Value = Format(Now(), "YYMMDD") & " NEWLY ASSIGNED"
                         .Range("K" & trackerEnd.Row).Value = nameStr
                         .Range("M" & trackerEnd.Row).Value = Format(Now(), "YYYY-MM-DD")
                         Exit For
@@ -938,7 +947,13 @@ formEditArchive2.Value = True
 End Sub
 
 
+Private Sub formEditAutoScroll_Click()
+config.Range("D33").Value = formEditAutoScroll.Value
+End Sub
+
 Private Sub formEditComment_Change()
+If srchProtect = True Then Exit Sub ' kick if in reload status
+
 If formEditLoader And Not searchShield And formEditRowDisp.Value <> vbNullString Then ws.Range("J" & formEditRowDisp.Value).Value = formEditComment.Value
 End Sub
 
@@ -952,6 +967,8 @@ End If
 End Sub
 
 Private Sub formEditCycle_Change()
+If srchProtect = True Then Exit Sub ' kick if in reload status
+
 If formEditLoader And formEditRowDisp.Value <> vbNullString And Not searchShield Then ws.Range("F" & formEditRowDisp.Value).Value = formEditCycle.Value
 End Sub
 
@@ -985,12 +1002,18 @@ If formEditAutoSort.Value = True Then
     editSorted = 1
     Call sortCaseMaster
 End If
+
+formEditIQID.Value = "" ' wipe
+    Call editBoxValidate
+    Call editCtrlSrcRemoval
 debugNotice = debugHH & "[User] Removed Entry " & """" & sDelLoc & """" & " from Tracker"
 Call postActionSeries
 Call RDT
 End Sub
 
 Private Sub formEditDoDate_Change()
+If srchProtect = True Then Exit Sub ' kick if in reload status
+
 If formEditLoader And formEditRowDisp.Value <> vbNullString And Not searchShield Then ws.Range("G" & formEditRowDisp.Value).Value = formEditDoDate.Value
 End Sub
 
@@ -1003,6 +1026,7 @@ End If
 End Sub
 
 Private Sub formEditID_Change()
+If srchProtect = True Then Exit Sub ' kick if in reload status
 If formEditLoader And formEditRowDisp.Value <> vbNullString And Not searchShield Then ws.Range("C" & formEditRowDisp.Value).Value = formEditID.Value
 
 On Error GoTo halt
@@ -1036,9 +1060,17 @@ RDT
 End Sub
 
 Private Sub formEditManUpdate_Click()
+srchProtect = True
+
     sortFlag = 1
     editSorted = 1
     Call sortCaseMaster
+    
+    searchDirection = True
+    formEditRowDisp.Value = "" ' TRIGGER WIPE
+    RenewLookForEntry
+
+srchProtect = False
 End Sub
 
 Private Sub formEditNavi_KeyDown(ByVal KeyCode As MSForms.ReturnInteger, ByVal Shift As Integer)
@@ -1050,6 +1082,7 @@ Private Sub formEditNavi_KeyDown(ByVal KeyCode As MSForms.ReturnInteger, ByVal S
 End Sub
 
 Private Sub formEditNavi_SpinDown()
+If (formEditAutoScroll.Value And formEditIQID.Value = "") Then formEditIQID.Value = 1
 editSorted = 0
 searchEdit = False
 searchShield = True
@@ -1077,6 +1110,7 @@ searchShield = False ' release shield
 End Sub
 
 Private Sub formEditNavi_SpinUp()
+If (formEditAutoScroll.Value And formEditIQID.Value = "") Then formEditIQID.Value = 1
 editSorted = 0
 searchEdit = False
 searchShield = True
@@ -1104,10 +1138,14 @@ searchShield = False ' Release Shield
 End Sub
 
 Private Sub formEditNID_Change()
+If srchProtect = True Then Exit Sub ' kick if in reload status
+
 If formEditLoader And Not searchShield And formEditRowDisp.Value <> vbNullString Then ws.Range("K" & formEditRowDisp.Value).Value = formEditNID.Value
 End Sub
 
 Private Sub formEditRID_Change()
+If srchProtect = True Then Exit Sub ' kick if in reload status
+
 If formEditRID.Value = "" Then
     descRID = 0
     GoTo blankPt
@@ -1159,6 +1197,8 @@ updateRecord
 End Sub
 
 Private Sub formEditSID_Change()
+If srchProtect = True Then Exit Sub ' kick if in reload status
+
 If formEditSID.Value = "" Then
     descSID = 0
     GoTo blankPt
@@ -1269,6 +1309,8 @@ formEditSSFblock = False
 End Sub
 
 Private Sub formEditSSID_Change()
+If srchProtect = True Then Exit Sub ' kick if in reload status
+
 If formEditLoader And Not searchShield And formEditRowDisp.Value <> vbNullString Then ws.Range("L" & formEditRowDisp.Value).Value = formEditSSID.Value
 End Sub
 
@@ -1503,15 +1545,27 @@ End Sub
 
 Private Sub viewSortDate_Click() ' RID Sub-procedure for Sorting
 Call SDT
+srchProtect = True
 sortFlag = 4
 Call sortCaseMaster
+
+    searchDirection = True ' leakage prevention
+    RenewLookForEntry
+
+srchProtect = False
 Call RDT
 End Sub
 
 Private Sub viewSortDoDate_Click() ' RID Sub-procedure for Sorting
 Call SDT
+srchProtect = True
 sortFlag = 3
 Call sortCaseMaster
+
+    searchDirection = True ' leakage prevention
+    RenewLookForEntry
+
+srchProtect = False
 Call RDT
 End Sub
 
@@ -1538,8 +1592,14 @@ End Sub
 
 Private Sub viewSortRID_Click() ' RID Sub-procedure for Sorting
 Call SDT
+srchProtect = True
 sortFlag = 2
 Call sortCaseMaster
+
+    searchDirection = True ' leakage prevention
+    RenewLookForEntry
+
+srchProtect = False
 Call RDT
 End Sub
 
@@ -1554,8 +1614,14 @@ End Sub
 
 Private Sub viewSortSID_Click() ' RID Sub-procedure for Sorting
 Call SDT
+srchProtect = True
 sortFlag = 1
 Call sortCaseMaster
+
+    searchDirection = True ' leakage prevention
+    RenewLookForEntry
+
+srchProtect = False
 Call RDT
 End Sub
 
@@ -1608,8 +1674,6 @@ sortOrder = False
 debugHH = SlogVer & "[" & Format(Now(), "hh:nn:ss") & "]"
 formCoverLog.Text = SconsoleVer & " " & Format(Now(), "hh:nn:ss")
 senseiCoverLog = SconsoleVer & " " & Format(Now(), "hh:nn:ss")
-formAppendRIDex.Value = trackerRIDHelp.RID01.Value
-viewFormRIDex.Value = trackerRIDHelp.RID01.Value
 searchDirection = False
 isOnAppendSort = False
 srchResult = 3
@@ -1625,6 +1689,9 @@ formEditSSFx = 0 ' default disable the specific search
 formEditSSFblock = False ' default is open on SSF gate
 searchType = config.Range("D29").Value ' WHAT TYPE ARE WE SEARCHING?
 formDataFinalLog.Value = config.Range("D32").Value ' EXPORT FINAL LOG
+formEditAutoScroll.Value = config.Range("D33").Value ' Auto Scroll
+
+srchProtect = False ' not protected
 
 
 ' FIX SPREADSHEET
@@ -1648,6 +1715,11 @@ If TypeVer = "RELEASE" Then
 Else
     CoverVerType.Caption = Left(TypeVer, 5)
 End If
+
+'update RIDex
+formAppendRIDex.Value = trackerRIDHelp.RID01.Value ' adjusting position
+viewFormRIDex.Value = trackerRIDHelp.RID01.Value ' adjusting position
+
 Call editBoxValidate
 LinkVersion.Caption = SlogVer
 
@@ -2052,6 +2124,28 @@ If searchEdit = True Then ' remove all data when found empty
     Call editCtrlSrcRemoval
 End If
 End Sub
+
+Sub RenewLookForEntry() ' alternative loading path in case of reorder
+srchObj = formEditID.Value
+
+If debugLocatedRow <> "" Then
+    srchResult = formEditRowDisp.Value
+End If
+If formEditIQID.Value = "" Or srchObj = "" Then
+    Call editBoxValidate
+    Call editCtrlSrcRemoval
+    Exit Sub
+End If
+
+Call findNextMatchingValue
+Call LoadResultEdit ' Temp disabled for this issue
+formEditRowDisp.Value = srchResult
+
+If searchEdit = True Then ' remove all data when found empty
+    Call editCtrlSrcRemoval
+End If
+End Sub
+
 Sub findNextMatchingValue() ' todo: Dual Directional Passed 220512
 Dim Srch As Range, Cellx As Range
 Dim SrchTp As Long ' sum of bunch of instring
@@ -2457,7 +2551,7 @@ With ws
 End With
 
 End Sub
-Sub codingConfigInitialize()
+Sub codingConfigInitialize() ' WHAT IS THIS FOR?
 
 End Sub
 

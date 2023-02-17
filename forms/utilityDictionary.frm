@@ -313,7 +313,7 @@ DEPQ3.BackColor = &H8000000F
 End Sub
 
 Sub countryWriteHDP() '  depC.ACTION.Load_HDP
-Dim dCell As Range, Drow As Long, dString As String
+Dim dCell As Range, Drow As Long, dString As String, dCountry As String
 
 If Not ReverseCountry Then ' use output
     For Each dCell In HDPtbl ' loop
@@ -323,8 +323,9 @@ If Not ReverseCountry Then ' use output
         End If
     Next dCell
 Else ' use input
+    dCountry = UCase(matchInputCountry.Value)
     For Each dCell In HDPtbl ' loop IN REVERSE MODE
-        If dCell.Value = matchInputCountry.Value Then ' found a match hdp
+        If dCell.Value = matchInputCountry.Value Or dCell.Value = dCountry Then ' found a match hdp
             Drow = dCell.Row
             DEPinfoHDP.Value = DEPinfoHDP.Value & Application.WorksheetFunction.Text(dCell.Value, "00") & "   " & sData.Range("C" & Drow).Value & "   " & Format(Left(sData.Range("D" & Drow).Value, 25), "!@@@@@@@@@@@@@@@@@@@@@@@@@") & "   " & Format(sData.Range("E" & Drow).Value, "$ 000.00") & vbNewLine
         End If

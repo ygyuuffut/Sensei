@@ -912,6 +912,8 @@ End If
 
 End Sub
 
+
+
 Private Sub Gconfig_delWarn_Click() ' GLOBAL CONFIG WARN BEFORE DELETE
 If Gconfig_delWarn Then
     config.Range("F7").Value = True
@@ -1076,7 +1078,7 @@ Sub initialize110() ' initialize 110 content
     f110Row = f110_RowCt.Value ' 110 - Make row Number valid
     f110rowDispUpdate ' 110 - UPDATE FIELD
     f110_name.Value = name110.Value ' 110 LOAD NAME
-    f110_ssn = ssn110.Value ' 110 LOAD SSN
+    f110_ssn = Format(ssn110.Value, "000000000") ' 110 LOAD SSN
     update110Display ' 110
 
 End Sub
