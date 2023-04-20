@@ -15,4 +15,5 @@ Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 Private Sub formGuideHide_Click()
 trackerAssist.Hide
+globalSave
 End Sub

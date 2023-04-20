@@ -1,10 +1,10 @@
 VERSION 5.00
 Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} trackerAPI 
    Caption         =   "Client Record Management Sensei"
-   ClientHeight    =   6015
-   ClientLeft      =   120
-   ClientTop       =   465
-   ClientWidth     =   8100
+   ClientHeight    =   6495
+   ClientLeft      =   150
+   ClientTop       =   585
+   ClientWidth     =   9360.001
    OleObjectBlob   =   "trackerAPI.frx":0000
    StartUpPosition =   1  'CenterOwner
 End
@@ -19,7 +19,8 @@ Public formRecordAP As Boolean
 Public acWs As Worksheet, acID As Range, acDate As Range, acLs As Long ' archive sheet, archive ID col / Date
 Public ws As Worksheet, tbl As ListObject, SenXcel As Workbook, ecsp As Worksheet
 Public sid As Range, rid As Range, doDate As Range, clDate As Range, IQid As Range
-Public nid As Range, ssid As Range
+Public nid As Range, ssid As Range, cInfo As Range
+Public countNow As Range ' how much do we have?
 Public sortFlag As Integer, filterFlag As Integer, sortRng As Range, filtRID As String
 Public sortOrder As Boolean
 Public stackFilterFlag As Boolean, stackCompoundFlag As Boolean
@@ -32,7 +33,7 @@ Public ctrlSrc As String, editIQID As String, editSID As String, editSIDex As St
 Public Rcount As Long, editSorted As Integer, uCancel As Integer, Nvoid As String
 Public config As Worksheet ' SENSEI CONFIG
 Public Data As Worksheet ' SENSEI DATA (TABLES)
-Public rRpt As Worksheet, rTemp As Worksheet ' Sensei Reject report, and GENERIC buffer
+Public rTemp As Worksheet ' Sensei Reject report, and GENERIC buffer
 Public SconsoleVer As String, SlogVer As String, StdVer As String ' Sensei Version migrate
 Public TypeVer As String ' WHATKIND OF RELEASE IS IT?
 Public PtchVer As String ' PATCH VERSION
@@ -41,7 +42,7 @@ Public appendType As String ' TEST FOR WHAT TYE WE APPEDING
 Public appendDate As Long ' This year
 Public thisYear As Long, thisCount As Range, cachedYear As Long ' Used for Misc counting
 ' append sort indicator
-Public isOnAppendSort As Boolean
+Public isOnAppendSort As Boolean, isPruneData As Boolean
 ' Search Lib
 Public searchDirection As Boolean, searchEdit As Boolean, searchShield As Boolean
 Public srchObj As String, srchResult As String, searchType As String ' type used for CSP/CMS/MISC/ALL
@@ -52,9 +53,11 @@ Public Mfloater As Range, Afloater As Range, AchLimit As Range, ACsht As Workshe
 Public migrateTY As String, formDataThisSensei As String
 Public formEditSSFx As Long, formEditSSFblock As Boolean
 ' SENSEI VERSION LIB
-Public senseiVersion As String, senseiLogVer As String, senseiCoverLog As String
-Const currentLong = 302 ' Table Last Row number
-Const currentCapacity = 300 ' Max capacity
+Public senseiLogVer As String, senseiCoverLog As String
+
+Const currentLong = 502 ' Table Last Row number
+Const currentCapacity = 500 ' Max capacity
+
 Public autoSaveOptn As Boolean, autoSaveOptnLC As Range  ' Counts for autosave, later will be isolated to different setting menu
 Public autoSaveCap As Long ' This cap will be later replaced with public int from config sheet
 
@@ -84,6 +87,11 @@ Private Sub debugReloadInfo_Click()
 Call loadMatchestoDebug
 End Sub
 
+Private Sub fontCoverObtainFont_Click() ' summon font table
+    trackerAPI.Hide
+    trackerObtainFonts.Show
+End Sub
+
 Private Sub formAppendDoDate_Change()
 On Error Resume Next ' we do not care if this bumped into error
 formAppendSID.Value = 1
@@ -102,7 +110,7 @@ End Sub
 Private Sub formAppendExecute_Click() ' add a record to table - Operational 220510
 Call SDT
 Dim tempRow As Integer
-If Range("M1").Value < currentCapacity Then
+If countNow.Value < currentCapacity Then
     For Each cyclingCell In IQid
         If cyclingCell.Value = "" Then
             tempRow = cyclingCell.Row
@@ -112,7 +120,7 @@ If Range("M1").Value < currentCapacity Then
             Case "C" ' CMS
                 Range("C" & tempRow).Value = "CMS-" & formAppendID.Value
             Case "M" ' MISC
-                Range("C" & tempRow).Value = "MISC-" & Format(Now(), "YYMMDD") & Format(thisCount.Value, "000000")
+                Range("C" & tempRow).Value = "MISC-" & Format(Now(), "YYMMDD") & Format(thisCount.Value, "000000") & " 1"
                 thisCount.Value = thisCount.Value + 1
             Case Else ' UNDEFINED
                 MsgBox "It seems that the type is undefined, amend attempt blocked.", vbInformation, "Append Type Error"
@@ -124,11 +132,13 @@ If Range("M1").Value < currentCapacity Then
             Range("J" & tempRow).Value = formAppendActnComment.Value
             Range("K" & tempRow).Value = formAppendNID.Value
             Range("L" & tempRow).Value = formAppendSSID.Value
-            Range("M" & tempRow).Value = formAppendDate.Value
+            Range("M" & tempRow).Value = formAppendContactInfo.Value
+            Range("N" & tempRow).Value = formAppendDate.Value
             Exit For
         End If
     Next cyclingCell
-        Select Case appendType
+    
+    Select Case appendType
     Case "D" ' CSP
          MsgBox "Appended Item ID: " & formAppendID.Value & " to Record!", vbOKOnly, "Client Record Management Sensei"
     Case "C" ' CMS
@@ -162,6 +172,7 @@ If formAppendClean.Value = False Then
     formAppendActnComment.Value = ""
     formAppendNID.Value = ""
     formAppendSSID.Value = ""
+    formAppendContactInfo.Value = ""
 End If
 
 If formAppendAutoSort.Value = True Then
@@ -207,6 +218,7 @@ End Sub
 
 
 Private Sub formAppendTypeSel_SpinUp()
+
 If config.Range("D26").Value = "D" Then
     config.Range("D26").Value = "M"
     formAppendID.Value = ""
@@ -236,6 +248,34 @@ End If
 summa:
 appendType = config.Range("D26").Value
 appedingLabelUpdate
+End Sub
+Sub formAppendTypeValX() ' to update
+
+If config.Range("D26").Value = "D" Then
+    If IDholder <> Nvoid Then ' only release when there is stuff
+        formAppendID.Value = IDholder
+        IDholder = vbNullString
+    End If
+    formAppendID.MaxLength = 18
+    formAppendID.Enabled = True
+    GoTo cut
+End If
+If config.Range("D26").Value = "C" Then
+    IDholder = formAppendID.Value ' helds value
+    formAppendID.Value = Left(formAppendID.Value, 8)
+    formAppendID.MaxLength = 8
+    formAppendID.Enabled = True
+    GoTo cut
+End If
+If config.Range("D26").Value = "M" Then
+    formAppendID.Value = ""
+    formAppendID.MaxLength = 0
+    formAppendID.Enabled = False
+    GoTo cut
+End If
+
+cut:
+
 End Sub
 
 Private Sub formAppendTypeSel_SpinDown()
@@ -269,6 +309,7 @@ summa:
 appendType = config.Range("D26").Value
 appedingLabelUpdate
 End Sub
+
 Sub appedingLabelUpdate()
 
 Select Case appendType
@@ -417,8 +458,8 @@ End Sub
 
 
 Private Sub formCoverLaunchRej_Click()
-utilityRejectReport.Show
 trackerAPI.Hide
+utilityRejectReport.Show
 End Sub
 
 Private Sub formCoverTitle_Click()
@@ -524,8 +565,8 @@ If migrateTY = "S" Then ' PASSING AS OF 220517 FROM PREV SENSEI
             End If
             countPointer = countPointer + 1
         Next cellPointer
-        .Range("C3:M" & cellPointer.Row).Select
-        .Range("C3:M" & cellPointer.Row).Copy
+        .Range("C3:N" & cellPointer.Row).Select
+        .Range("C3:N" & cellPointer.Row).Copy
     End With
     thisSensei.Activate
     If formDataImportOptn = True Then
@@ -574,7 +615,7 @@ ElseIf migrateTY = "C" Then ' passing as of 220517 FROM NET CSP
                 .Range("J" & cellPointer.Row).Value = "New Migrated Entry"
                 '.Range("K" & cellPointer.Row).Value = SOME KIND OF NAME
                 '.Range("L" & cellPointer.Row).Value = SOME KIND OF SSN
-                .Range("M" & cellPointer.Row).Value = formAppendDate.Value
+                .Range("N" & cellPointer.Row).Value = formAppendDate.Value
                 countPointer = countPointer + 1
             End If
         Next cellPointer
@@ -616,20 +657,20 @@ If agrClear = vbOK And formDataNukeAch.Value = False Then
     ThisWorkbook.Sheets(1).Range("C3:K" & currentLong).Value = ""
     With ACsht
         .Activate
-        .Range("B3:L3002").Value = ""
+        .Range("B3:O3002").Value = ""
     End With
     ThisWorkbook.Sheets(1).Activate
-    debugNotice = debugHH & "[User] Removed All Entries in Sensei"
+    debugNotice = debugHH & "[User]: Removed All Entries in Sensei"
 End If
 
 If agrClear = vbOK And formDataNukeAch.Value = True Then
     With ACsht
         .Visible = xlSheetVisible
         .Activate
-        .Range("B3:L3002").Value = ""
+        .Range("B3:O3002").Value = ""
     End With
     ThisWorkbook.Sheets(1).Activate
-    debugNotice = debugHH & "[User] Removed All Entries in Archive"
+    debugNotice = debugHH & "[User]: Removed All Entries in Archive"
 End If
 
 update_Occupacy
@@ -660,19 +701,38 @@ End If
 
 update_Occupacy
 updateRecord ' wipe record
-debugNotice = debugHH & "[MASTER] Reset to Factory Setting"
+debugNotice = debugHH & "[MASTER]: Reset to Factory Setting"
 RDT
 
 Unload trackerAPI ' cancel the event
+Unload utilityLink
+Unload utilityForms
+Unload utilityDataScantron
+Unload utilityDictionary
 End Sub
 
 
+Private Sub formDataPruneCSP_Click() ' PRUNE EXISITING CSP BASED ON TOTAL EXPORT
+SDT
+isPruneData = True
+
+updateExistingEntry
+
+isPruneData = False
+update_Occupacy
+RDT
+debugNotice = debugHH & "[User]: Pruned against ""Assigned to Me"" Export"
+postActionSeries
+End Sub
 
 Private Sub formDataUpdate_Click() ' NUKE DATA
 SDT
 If formDataConExp.Value = True Then
     Dim resX As String
-    If config.Range("D14").Value <> 2 And formDataConExp.Value = True Then resX = MsgBox("Dual Update is enabled, Now when updating to Stage 1, please read the file selection prompt carefully to avoid form breakage" & vbNewLine & vbNewLine & "By selecting Yes, this warning will nolonger display. ", vbYesNoCancel, "Dual Update Info Card")
+    
+    If config.Range("D14").Value <> 2 And formDataConExp.Value = True _
+    Then resX = MsgBox("Dual Update is enabled, Now when updating to Stage 1, please read the file selection prompt carefully to avoid form breakage" & vbNewLine & vbNewLine & "By selecting Yes, this warning will nolonger display. ", vbYesNoCancel, "Dual Update Info Card")
+    
     If resX = vbYes Then
         config.Range("D14").Value = 2
     End If
@@ -680,13 +740,17 @@ If formDataConExp.Value = True Then
     updateArchiveThem
 End If
 
+isPruneData = False
 updateExistingEntry
 update_Occupacy
 RDT
 
+debugNotice = debugHH & "[User]: Updated against ""Need to Work"" Export"
+postActionSeries
 End Sub
 
-Sub updateExistingEntry() ' Updater for entries
+
+Sub updateExistingEntry() ' Updater for entries, to include prune ability
 Dim updaterV1 As FileDialog, EWPxcell As Workbook, KC As Long
 Dim updateFile As String, updateFile2 As String, updaterLine As Long, updaterTar As Range
 Dim nameStr As String, nameArr() As String ' amend to allow name import NID
@@ -698,15 +762,27 @@ KC = 0
 
 On Error GoTo handler
 With updaterV1
+If Not isPruneData Then ' not prune information
     .AllowMultiSelect = False
     .Filters.Add "Need to Work", "*.xlsx", 1
-    .Title = "Looking for self-assigned RegAF-Total Inquiries.xlsx..."
+    .Title = "Looking for Need to Work RegAF-Total Inquiries.xlsx..."
     .ButtonName = "Update"
     .Show
+ElseIf isPruneData Then ' we pruning
+    .AllowMultiSelect = False
+    .Filters.Add "Assigned to Me", "*.xlsx", 1
+    .Title = "Looking for self-assigned RegAF-Total Inquiries.xlsx..."
+    .ButtonName = "Prune"
+    .Show
+Else
+    GoTo handler ' out of options
+End If
     updateFile = .SelectedItems.Item(1)
 End With
 
+' KICK BLANK SELECTION
 If updateFile = "" Then GoTo handler
+
 
 ' Run Workbooks if found
 Set EWPxcell = Workbooks.Open(updateFile)
@@ -714,23 +790,29 @@ Set EWPxcell = Workbooks.Open(updateFile)
 If EWPxcell.Worksheets(1).Range("A1") <> "Inquiry ID" Then GoTo handler
 updaterLine = EWPxcell.Worksheets(1).Range("A" & Rows.Count).End(xlUp).Row
 
+
+' ### RUN THIS WHEN NOT IN PRUNE MODE
+If Not isPruneData Then
 For Each updaterTar In EWPxcell.Worksheets(1).Range("A2:A" & updaterLine + 1)
-    If updaterTar = vbNullString Then Exit For
+    If updaterTar = vbNullString Then Exit For ' KICK ON EMPTY
     
+    ' --- NAME SPLITTER ---
     nameStr = Replace(EWPxcell.Worksheets(1).Range("I" & updaterTar.Row).Value, _
                       ",", "") ' ASSIGN NID value, replace comma
-        nameArr = Split(nameStr, " ") ' Split the name
+    nameArr = Split(nameStr, " ") ' Split the name
     nameStr = nameArr(0) & " " & nameArr(1) ' We only care for the Last and First
-    
+    ' ---------------------
+
     With ecsp.Range("C1" & ":C" & currentLong) ' match and update
         Set searchRt = .Find(Left(updaterTar.Value, 18), after:=Range("C1"), LookIn:=xlValues)
     End With
+    
     If Not searchRt Is Nothing Then ' if found it passed
         If ecsp.Range("D" & searchRt.Row).Value = 2 Then ecsp.Range("D" & searchRt.Row).Value = 1 ' only alter stage 2
     Else
         If FormDataAppendAmend Then ' go ahead and put the new entry on the form 221003
             With ecsp
-                If Not .Range("M1").Value < currentCapacity Then ' if full, append nothing
+                If Not countNow.Value < currentCapacity Then ' if full, append nothing
                     MsgBox "Reached Max Capacity! Cannot append more entries, exiting..."
                     GoTo handler
                 End If
@@ -740,15 +822,59 @@ For Each updaterTar In EWPxcell.Worksheets(1).Range("A2:A" & updaterLine + 1)
                         .Range("D" & trackerEnd.Row).Value = 1
                         .Range("J" & trackerEnd.Row).Value = Format(Now(), "YYMMDD") & " NEWLY ASSIGNED"
                         .Range("K" & trackerEnd.Row).Value = nameStr
-                        .Range("M" & trackerEnd.Row).Value = Format(Now(), "YYYY-MM-DD")
+                        .Range("N" & trackerEnd.Row).Value = Format(Now(), "YYYY-MM-DD")
                         Exit For
                     End If
                 Next trackerEnd
             End With
         End If
     End If
+
     KC = KC + 1
 Next updaterTar
+debugNotice = debugHH & "[Updater]: Validated " & KC & " Entries"
+
+' ### RUN THIS IN PRUNE MODE
+ElseIf isPruneData Then
+Dim ecReviewer As Range, reviewerRow As Long
+
+' --- GRAND LOOP FOR VALIDATING CSP ---
+For Each ecReviewer In ecsp.Range("C1" & ":C" & currentLong)
+    reviewerRow = ecReviewer.Row
+    
+    ' ### PRUNE PREVENTION
+    If ecReviewer.Value = "" Or Len(ecReviewer.Value) < 17 Then ' PREVENT PRUNE FOR SPECIAL CASES
+       GoTo exitBlank
+    End If
+    If InStr(ecReviewer.Value, "CMS") <> 0 Or _
+       InStr(ecReviewer.Value, "MISC") <> 0 Then
+       GoTo exitBlank
+    End If
+
+    ' ### MATCH TO CHECK PRUNE
+    With EWPxcell.Worksheets(1).Range("A1:A" & updaterLine)
+        Set searchRt = .Find(Left(ecReviewer.Value, 18), after:=Range("A1"), LookIn:=xlValues)
+    End With
+    
+    ' ### PRUNE IT FOR DNE
+    If searchRt Is Nothing Then
+        With ecsp ' ARCHIVE FLAG UP
+            .Range("D" & reviewerRow).Value = 5
+            .Range("J" & reviewerRow).Value = Format(Now(), "YYMMDD") & " ARCHIVE BY PRUNING" & vbCrLf & .Range("J" & reviewerRow).Value
+        End With
+        KC = KC + 1
+    End If
+    
+exitBlank:
+Next ecReviewer
+debugNotice = debugHH & "[Updater]: Flagged " & KC & " Entries for Prune"
+' -------------------------------------
+
+' ### KICK FOR EXCEPTIONS
+Else
+    GoTo handler
+End If
+
 EWPxcell.Close False
 
 ' Adjustment to sorting
@@ -756,7 +882,19 @@ EWPxcell.Close False
     isOnAppendSort = True
     Call postActionSeries
     Call sortCaseMaster
+    
+If Not isPruneData Then
     MsgBox "Entries successfully updated/appended against Exports", vbOKOnly, "Entry Update Completion"
+ElseIf isPruneData Then
+    MsgBox "Entries successfully pruned against Exports", vbOKOnly, "Entry Pruning Completion"
+    
+    ' MIGRATED PRUNE TO ARCHIVE + SHADOW PROTECTION
+    If formEditSID.Value = 5 Then editCtrlArchiveShield
+    localeRepair
+    updateArchiveThem
+    updateRecord
+End If
+
     Exit Sub
 handler:
     MsgBox "Actions is either cancelled or incomplete due to exceptions.", vbOKOnly, "Entry Update encountered Exception(s)"
@@ -892,10 +1030,162 @@ Private Sub formDataUpdateRemind_Click()
     update_Occupacy
 End Sub
 
+Private Sub formDataUpdateWorkflow_Click() ' LOAD FROM FMWF CSV
+SDT
+' === BEFORE WORK PREPARATION ===
+Dim selectFMWF As FileDialog, selectFMWFpath As String, FMWFcard As Workbook
+Dim FMWFlast As Long, FMWFcell As Range, PointerA As Long, PointerB As Long
+Dim checkerCell As Range
+Dim countTotal As Long, countAmend As Long
+    countTotal = 0
+    countAmend = 0
+    
+Dim temporaryEmailList As Dictionary: Set temporaryEmailList = New Scripting.Dictionary
+Dim temporaryEmailRange As Range: Set temporaryEmailRange = Data.Range("rejcMemberTable[REJC MEMBER]")
+Dim pointOrder As String, pointSSID As String, pointTechEmail As String, _
+    pointTempName As String, pointTempNameArr() As String
+rTemp.Visible = xlSheetVisible
+nukeDataBuffer ' DELETE
+Set temporaryEmailList = New Dictionary
+
+' === BLOCK FULL ===
+If Not countNow.Value < currentCapacity Then
+    MsgBox "Record Table is full, please consider remove some Entries", vbOKOnly, "Client Record Management Sensei"
+    RDT
+    Exit Sub
+End If
+
+' === LOAD FILE SELECT ===
+ReAssign:
+Set selectFMWF = Application.FileDialog(msoFileDialogFilePicker)
+With selectFMWF
+    .Filters.Clear
+    .AllowMultiSelect = False
+    .InitialFileName = Application.DefaultFilePath
+    .Title = "Updating Workflow Rejection from..."
+    .Filters.Add "Workflow CSV", "*.csv", 1
+    .ButtonName = "Load"
+    If .Show = 0 Then Exit Sub ' Quit on Cancel
+    selectFMWFpath = .SelectedItems(1)
+End With
+
+' === LOAD ASSIGNED FILE ===
+Set FMWFcard = Workbooks.Open(selectFMWFpath)
+If Not FMWFcard.Sheets(1).Range("A1").Value <> "From CPC" And _
+       FMWFcard.Sheets(1).Range("B1").Value <> "Barcode" And _
+       FMWFcard.Sheets(1).Range("C1").Value <> "P" Then
+    FMWFcard.Close
+    MsgBox "File is not a FMWF csv export, please select another one instead.", vbOKOnly, "Workflow Update Exceptions"
+    GoTo ReAssign
+End If
+
+' === MOVE DATA ===
+FMWFcard.Sheets(1).Range("A2:N1001").Copy
+rTemp.Range("A1").PasteSpecial xlPasteAll
+Application.CutCopyMode = xlCopy
+FMWFcard.Close
+
+' === LOAD EMAIL LIST ===
+With Data ' load EMAILS
+    For Each FMWFcell In temporaryEmailRange
+        If FMWFcell.Value <> "" And FMWFcell.Value <> "##" Then ' prevent ## from entering
+            temporaryEmailList.Add FMWFcell.Text, .Range("R" & FMWFcell.Row).Text
+        End If
+    Next FMWFcell
+End With
+
+' === SIEVE AND PRUNE ===
+FMWFlast = rTemp.Cells.Find("*", rTemp.Range("A1"), LookIn:=xlValues, searchDirection:=xlPrevious).Row
+
+For Each FMWFcell In rTemp.Range("I1:I" & FMWFlast)
+    PointerA = FMWFcell.Row
+    
+    ' skip lines
+    If FMWFcell.Value = "AFRC" Then GoTo skipA
+    
+    ' modify data format
+    pointOrder = rTemp.Range("E" & PointerA).Value
+    pointSSID = Format(Replace(rTemp.Range("D" & PointerA).Value, "-", ""), "000000000")
+    
+    ' --- NAME SPLITTER ---
+        pointTempName = Replace(rTemp.Range("J" & PointerA).Value, _
+                      ".", " ") ' ASSIGN NID value, replace comma
+        pointTempNameArr = Split(pointTempName, " ") ' Split the name
+        pointTempName = Left(pointTempNameArr(1), 1) & Left(pointTempNameArr(0), 1) ' We only care for the Last and First
+    ' ---------------------
+    
+    ' Check for exist, write on yes
+    If temporaryEmailList.Exists(pointTempName) Then
+        pointTechEmail = Replace(temporaryEmailList.Item(pointTempName), ";", "|") & pointTempName
+    Else
+        pointTechEmail = ""
+    End If
+    
+    ' Block amend if found
+    With ecsp.Range("J1" & ":J" & currentLong)
+        Set checkerCell = .Find(pointOrder, after:=Range("J1"), LookIn:=xlValues)
+        If Not checkerCell Is Nothing Then ' found exist, WITHER BUMP TO 1 OR PING, THEN SKIP
+            If ecsp.Range("D" & checkerCell.Row).Value < 3 Then _
+                ecsp.Range("D" & checkerCell.Row).Value = 1
+            If ecsp.Range("D" & checkerCell.Row).Value > 2 Then _
+                ecsp.Range("J" & checkerCell.Row).Value = Format(Now(), "YYMMDD") _
+                                                          & " RECEIVED PING FROM PULL UPDATE" & vbCrLf _
+                                                          & ecsp.Range("J" & checkerCell.Row).Value
+        GoTo skipA
+        End If
+    End With
+    With ecsp.Range("L1" & ":L" & currentLong)
+        ' Incase of an duplicate/exist item invoke direct change
+        Set checkerCell = .Find(pointSSID, after:=Range("L1"), LookIn:=xlValues)
+        If Not checkerCell Is Nothing Then ' found exist, WITHER BUMP TO 1 OR PING, THEN SKIP
+            ecsp.Range("D" & checkerCell.Row).Value = 1
+            ecsp.Range("J" & checkerCell.Row).Value = Format(Now(), "YYMMDD") & pointOrder & " NEW WORKFLOW REJECT ###" & vbCrLf _
+                                                        & ecsp.Range("J" & checkerCell.Row).Value
+        GoTo skipA
+        End If
+    End With
+
+    ' Submit to Main Table AS AMEND <<ADD FIND CONDITION AS TODO>>
+    With ecsp
+        For Each cyclingCell In IQid
+        If cyclingCell.Value = "" Then
+            PointerB = cyclingCell.Row
+            ' Misc Type append
+            .Range("C" & PointerB).Value = "MISC-" & Format(Now(), "YYMMDD") & Format(thisCount.Value, "000000") & " 1"
+            thisCount.Value = thisCount.Value + 1
+            .Range("D" & PointerB).Value = 1 ' STATUS
+            .Range("H" & PointerB).Value = 9 ' TYPE 9 FMWF REJECT
+            .Range("J" & PointerB).Value = Format(Now(), "YYMMDD") & " " & pointOrder & " NEW WORKFLOW REJECT #FMWFREJC#"
+            ' .Range("K" & PointerB).Value = SOME NAME
+            .Range("L" & PointerB).Value = pointSSID
+            .Range("M" & PointerB).Value = pointTechEmail
+            .Range("N" & PointerB).Value = Format(Now(), "YYYY-MM-DD")
+            countAmend = countAmend + 1
+            Exit For ' kick from for once appended
+        End If
+        Next cyclingCell
+    End With
+skipA:
+countTotal = countTotal + 1
+Next FMWFcell
+
+nukeDataBuffer
+debugNotice = debugHH & "[Info]: Pulled " & countTotal & " Updates from Workflow Rejects; amended " & countAmend & " Entries as new"
+updateRecord
+update_Occupacy
+postActionSeries
+    sortFlag = 1 ' Sort it by stage
+    sortCaseMaster
+rTemp.Visible = xlSheetHidden
+ecsp.Activate
+RDT
+globalSave
+End Sub
+
 Private Sub formDebugReset_Click()
     With ThisWorkbook.Sheets(1)
         .Range("C3:K102").Value = ""
-        .Range("O1").Value = 0
+        .Range("P1").Value = 0
     End With
     With ThisWorkbook.Sheets("CSP.ACH")
         .Activate
@@ -951,12 +1241,39 @@ Private Sub formEditAutoScroll_Click()
 config.Range("D33").Value = formEditAutoScroll.Value
 End Sub
 
+Private Sub formEditAutoSSN_Click() ' load ssid alternative way
+    If formEditSSID.Value <> "" Then SetClipboard (formEditSSID.Value)
+End Sub
+
 Private Sub formEditComment_Change()
 If srchProtect = True Then Exit Sub ' kick if in reload status
 
 If formEditLoader And Not searchShield And formEditRowDisp.Value <> vbNullString Then ws.Range("J" & formEditRowDisp.Value).Value = formEditComment.Value
 End Sub
 
+
+Private Sub formEditContactInfo_Change() ' AMEND EMAIL ON THE RUN
+If srchProtect = True Then Exit Sub ' kick if in reload status
+
+If formEditLoader And Not searchShield And formEditRowDisp.Value <> vbNullString Then ws.Range("M" & formEditRowDisp.Value).Value = formEditContactInfo.Value
+End Sub
+
+Private Sub formEditContactMember_Click() ' to send a simple OL Email
+
+If formEditContactInfo.Value = "" Or formEditRowDisp.Value = "" Or _
+    InStr(formEditContactInfo.Text, "@") = 0 Then Exit Sub  ' KICK EMPTY and no valid email
+' USE ADDRESS PROVIDED TO SENT A SIMPLE EMAIL,
+' MIGHT NEED SOME LOGICS TO ONLY PULL FIRST LINE OF DESC
+
+If InStr(formEditComment.Text, "#FMWFREJC#") <> 0 Then ' CONDITIONAL DIVERGE FOR FMWF REJC
+    contactFMWFrejc
+Else
+    contactPerson
+End If
+
+formEditorAddNotified ' NOTIFIED BLOCK
+
+End Sub
 
 Private Sub formEditConv3_Click()
 If formEditConv3 Then
@@ -971,6 +1288,7 @@ If srchProtect = True Then Exit Sub ' kick if in reload status
 
 If formEditLoader And formEditRowDisp.Value <> vbNullString And Not searchShield Then ws.Range("F" & formEditRowDisp.Value).Value = formEditCycle.Value
 End Sub
+
 
 Private Sub formEditDelEntry_Click() ' test row delete
 Call SDT
@@ -1011,10 +1329,89 @@ Call postActionSeries
 Call RDT
 End Sub
 
+Private Sub formEditDescLabel31_DblClick(ByVal Cancel As MSForms.ReturnBoolean)
+' Add today's entry quick and easy
+If formEditRowDisp.Value = "" Or formEditID.Enabled = False _
+    Or formEditID.Value = "" Then Exit Sub
+
+formEditorAddLogDate
+
+End Sub
+
+Sub formEditorAddLogDate() ' adds a new date to entry's log
+
+Dim thisDay As String, whatsThere As String
+whatsThere = formEditComment.Text
+thisDay = Format(Now(), "YYMMDD")
+If formEditComment.Value = "" Then ' blank = direct write
+    formEditComment.Value = thisDay & " "
+Else ' not blank = write date & vbCrLf & what is in there
+    formEditComment.Value = thisDay & " " & vbCrLf & formEditComment.Text
+End If
+
+End Sub
+
+Sub formEditorAddNotified() ' adds a new date to entry's log
+
+Dim thisDay As String, whatsThere As String
+whatsThere = formEditComment.Text
+thisDay = Format(Now(), "YYMMDD")
+If formEditComment.Value <> "" Then ' NOT blank = NOTICE
+    formEditComment.Value = thisDay & " NOTIFIED MEMBER OF BELOW" & vbCrLf & formEditComment.Text
+End If
+
+End Sub
+
+Sub formEditorAddLogTravelProfile() ' amend yymmdd constructed profile to log
+
+Dim thisDay As String, whatsThere As String
+whatsThere = formEditComment.Text
+thisDay = Format(Now(), "YYMMDD")
+If formEditComment.Value = "" Then ' blank = direct write
+    formEditComment.Value = thisDay & " CONSTRUCTED PROFILE"
+Else ' not blank = write date & vbCrLf & what is in there
+    formEditComment.Value = thisDay & " CONSTRUCTED PROFILE" & vbCrLf & formEditComment.Text
+End If
+
+End Sub
+Sub formEditorAddLogFlagExp() ' amend yymmdd flag it as exp for archive
+
+Dim thisDay As String, whatsThere As String
+whatsThere = formEditComment.Text
+thisDay = Format(Now(), "YYMMDD")
+If formEditComment.Value = "" Then ' blank = direct write
+    formEditComment.Value = thisDay & " FLAGGED TEST ENTRY FOR REMOVAL"
+Else ' not blank = write date & vbCrLf & what is in there
+    formEditComment.Value = thisDay & " FLAGGED TEST ENTRY FOR REMOVAL" & vbCrLf & formEditComment.Text
+End If
+formEditSID.Value = 5
+
+End Sub
+
+Private Sub formEditDescLabelEXP173_Click()
+
+If formEditRowDisp.Value = "" Or formEditID.Enabled = False _
+    Or formEditID.Value = "" Or InStr(formEditComment.Text, "FLAGGED TEST ENTRY FOR REMOVAL") <> 0 Then Exit Sub
+
+formEditorAddLogFlagExp
+End Sub
+
+Private Sub formEditDescLabelTravel172_Click()
+' add profile built
+If formEditRowDisp.Value = "" Or formEditID.Enabled = False _
+    Or formEditID.Value = "" Or InStr(formEditComment.Text, "CONSTRUCTED PROFILE") <> 0 Then Exit Sub
+    
+formEditorAddLogTravelProfile
+
+End Sub
+
 Private Sub formEditDoDate_Change()
 If srchProtect = True Then Exit Sub ' kick if in reload status
 
-If formEditLoader And formEditRowDisp.Value <> vbNullString And Not searchShield Then ws.Range("G" & formEditRowDisp.Value).Value = formEditDoDate.Value
+If formEditLoader _
+    And formEditRowDisp.Value <> vbNullString _
+    And Not searchShield _
+    Then ws.Range("G" & formEditRowDisp.Value).Value = formEditDoDate.Value
 End Sub
 
 Private Sub formEditDODID_Click()
@@ -1143,6 +1540,10 @@ If srchProtect = True Then Exit Sub ' kick if in reload status
 If formEditLoader And Not searchShield And formEditRowDisp.Value <> vbNullString Then ws.Range("K" & formEditRowDisp.Value).Value = formEditNID.Value
 End Sub
 
+Private Sub formEditPortLegacy_Click()
+portToM114
+End Sub
+
 Private Sub formEditRID_Change()
 If srchProtect = True Then Exit Sub ' kick if in reload status
 
@@ -1191,6 +1592,10 @@ Dim ACresponse As String
             Exit Sub
         End If
     End If
+    
+' Ground work to prevent shadow entry #shadow162
+If formEditSID.Value = 5 Then editCtrlArchiveShield
+
 localeRepair
 updateArchiveThem
 updateRecord
@@ -1415,9 +1820,6 @@ Private Sub formRecordStartDate_Change()
     
 End Sub
 
-Private Sub LinkVersion_Click()
-
-End Sub
 
 Private Sub theExit_Click()
     localeRepair
@@ -1642,7 +2044,6 @@ Set ecsp = SenXcel.Worksheets("CSP.TR")
 Set config = Worksheets("SENSEI.CONFIG")
 Set Data = Worksheets("SENSEI.DATA")
 Set ACsht = Worksheets("CSP.ACH")
-Set rRpt = Worksheets("REJECT.RPT")
 Set rTemp = Worksheets("DATA.TMP") ' GENERIC TEMP DATA STORAGE
 Set ws = Workbooks("SENSEI - dev.xlsm").Sheets("CSP.TR")
 Set acWs = Workbooks("SENSEI - dev.xlsm").Sheets("CSP.ACH") ' ARCHIVE
@@ -1656,9 +2057,11 @@ Set ssid = Range("entryTable[SSID]")
 Set doDate = Range("entryTable[DO.DATE]")
 Set clDate = Range("entryTable[DATE]")
 Set IQid = Range("entryTable[ID]")
+Set cInfo = Range("entryTable[CONTACT]")
 Set AchLimit = Sheets("CSP.ACH").Range("C3:C10002") ' archive limit
 Set autoSaveOptnLC = config.Range("D23") ' AUTOSAVE OPTION TOGGLE
 Set thisCount = config.Range("D28") ' MISC ENTRY COUNT
+Set countNow = config.Range("D34") ' WHAT IS THE NUMBER NOW?
 
 ' VARIABLE FIX
 formRecordAP = False
@@ -1680,7 +2083,6 @@ srchResult = 3
 Nvoid = ""
 migrateTY = "S"
 formDataThisSensei = "SENSEI - dev.xlsm"
-senseiVersion = "Sensei 1.4.0R"
 senseiLogVer = SlogVer
 formGlobalAutoSave.Value = autoSaveOptnLC.Value ' DO WE TURN THIS ON?
 cachedYear = config.Range("D27").Value ' CURRENT YEAR MARKED
@@ -1690,6 +2092,7 @@ formEditSSFblock = False ' default is open on SSF gate
 searchType = config.Range("D29").Value ' WHAT TYPE ARE WE SEARCHING?
 formDataFinalLog.Value = config.Range("D32").Value ' EXPORT FINAL LOG
 formEditAutoScroll.Value = config.Range("D33").Value ' Auto Scroll
+isPruneData = False ' not pruning data
 
 srchProtect = False ' not protected
 
@@ -1704,6 +2107,7 @@ srchProtect = False ' not protected
     editSSTdisplayUpdate
     updateRecord
     updateRecordConfig
+    formAppendTypeValX
 ' Update New GUI
     updateGUI
 
@@ -1713,7 +2117,7 @@ LogVersion.Caption = StdVer & " " & TypeVer & " " & PtchVer ' UPDATE UPDATE LOG 
 If TypeVer = "RELEASE" Then
     CoverVerType.Caption = TypeVer 'Left(TypeVer, 4) & "." ' Type of version (4+1 bytes)
 Else
-    CoverVerType.Caption = Left(TypeVer, 5)
+    CoverVerType.Caption = Left(TypeVer, 16)
 End If
 
 'update RIDex
@@ -1722,7 +2126,6 @@ viewFormRIDex.Value = trackerRIDHelp.RID01.Value ' adjusting position
 
 Call editBoxValidate
 LinkVersion.Caption = SlogVer
-
 End Sub
 Sub updateGUI() ' update Graphic element on Main
 
@@ -1738,10 +2141,10 @@ Sub updateConfig() ' update global config
     End If
 End Sub
 Sub update_Occupacy() ' update % occupied
-    formDataOccupacy = Format(ecsp.Range("O1").Value, "000") & " In Use / " & currentCapacity & " Available"
-    formDataOccupacyP = Format((ecsp.Range("O1").Value / currentCapacity) * 100, "000.0") & " % Used"
+    formDataOccupacy = Format(countNow.Value, "000") & " In Use / " & currentCapacity & " Available"
+    formDataOccupacyP = Format((countNow.Value / currentCapacity) * 100, "000.0") & " % Used"
     formDataOccuP.Max = currentCapacity
-    formDataOccuP.Value = ecsp.Range("O1").Value
+    formDataOccuP.Value = countNow.Value
 End Sub
 
 Sub updateRecord() ' recount the total record
@@ -1777,7 +2180,7 @@ With acWs
             End If
         'simple block without date
         Else
-            If InStr(.Range("C" & i).Value, "-") <> 0 And Len(.Range("C" & i)) = 18 Then _
+            If InStr(.Range("C" & i).Value, "-") <> 0 And InStr(.Range("C" & i).Value, "CMS-") = 0 And InStr(.Range("C" & i).Value, "MISC-") = 0 And Len(.Range("C" & i)) > 17 Then _
                 AIcsp = AIcsp + 1
             If InStr(.Range("C" & i).Value, "CMS-") <> 0 Then _
                 AIcms = AIcms + 1
@@ -1817,11 +2220,11 @@ End If
 'WRITE ENTRY
 formRecordTotalPercent.Caption = "100%"
 formRecordCsp.Caption = AIcsp
-formRecordCspPercent.Caption = Format(AIcsp / (acLs - 2), "000.0%")
+formRecordCspPercent.Caption = Format(Round(AIcsp / (acLs - 2), 3), "00.0%")
 formRecordCms.Caption = AIcms
-formRecordCmsPercent.Caption = Format(AIcms / (acLs - 2), "000.0%")
+formRecordCmsPercent.Caption = Format(Round(AIcms / (acLs - 2), 3), "00.0%")
 formRecordMisc.Caption = AImisc
-formRecordMiscPercent.Caption = Format(AImisc / (acLs - 2), "000.0%")
+formRecordMiscPercent.Caption = Format(Round(AImisc / (acLs - 2), 3), "00.0%")
 formRecordAP = False ' switch back
 
 formRecordStartDate.Text = Format(config.Range("D30").Value, "YYYY-MM-DD")
@@ -1897,17 +2300,21 @@ RDT
 End Sub
 Sub updateByRmindButton() ' UPDATE THE THING WITH DATE VALUE
 SDT
-Dim aCell As Range, aRow As Long
+Dim aCell As Range, aRow As Long, aDate, toDay
+toDay = DateValue(Format(Now(), "YYYY-MM-DD"))
 
     For Each aCell In doDate
         aRow = aCell.Row
+        On Error GoTo skipthis
         If aCell <> "" And ecsp.Range("C" & aRow).Value <> "" Then ' OMIT NA
-            If Not DateValue(Format(aCell.Value, "YYYY-MM-DD")) > DateValue(Format(Now(), "YYYY-MM-DD")) And ecsp.Range("D" & aRow).Value < 3 Then ' TODAY OR OLDER
+            aDate = DateValue(Format(aCell.Value, "YYYY-MM-DD"))
+            If Not aDate > toDay And ecsp.Range("D" & aRow).Value < 3 Then ' TODAY OR OLDER
                 ecsp.Range("D" & aRow).Value = 1
             ElseIf ecsp.Range("D" & aRow).Value < 3 Then
                 ecsp.Range("D" & aRow).Value = 2
             End If
         End If
+skipthis:
     Next aCell
     sortFlag = 1 ' Sort it by stage
     sortCaseMaster
@@ -1918,6 +2325,7 @@ Sub initialize_Sheet()
     config.Visible = xlSheetVeryHidden
     Data.Visible = xlSheetVeryHidden
     ACsht.Visible = xlSheetHidden
+    rTemp.Visible = xlSheetHidden
 End Sub
 Sub labelLocaleAdj()
 On Error GoTo handler
@@ -2147,7 +2555,7 @@ End If
 End Sub
 
 Sub findNextMatchingValue() ' todo: Dual Directional Passed 220512
-Dim Srch As Range, Cellx As Range
+Dim Srch As Range, Cellx As Range, deadEnd As Long
 Dim SrchTp As Long ' sum of bunch of instring
 Dim tSerial As String
 Dim tLast As Long: tLast = Range("D1:D" & currentLong).Find("*", Range("D2"), LookIn:=xlValues, searchDirection:=xlPrevious).Row
@@ -2161,10 +2569,13 @@ For Each Cellx In Range("C3:C" & tLast) ' ADD DATA#STAGE NUMBER MATCH TO ITEM
         tSerial = tSerial & "CSP#" & Range("D" & Cellx.Row).Value
     End If
 Next Cellx
+deadEnd = 0
 
 SearchCore: ' dual direction loop
 With Range("C1" & ":C" & currentLong)
 returnSSF:
+    deadEnd = deadEnd + 1
+    If deadEnd > 299 Then GoTo cutOff ' TESTING METHOD TO PREVENT INFINITE LOOP
     If searchDirection = False Then ' FORWARD SEARCH LOOP
         If srchResult <> "" Then
             Set Srch = .Find(srchObj, after:=Range("C" & srchResult), _
@@ -2280,7 +2691,7 @@ debugDate.ControlSource = debugStrIQID
 
 End Sub
 
-Sub LoadResultEdit() ' On: Debugging
+Sub LoadResultEdit() ' LOAD THE DATA BASED ON ROW
 
 Dim SrchFB As Integer
     SrchFB = srchResult ' assign found row number to elements
@@ -2295,7 +2706,7 @@ Dim editStrIQID As String
      ' CYC
         formEditCycle.Value = ws.Range("F" & SrchFB).Value
      ' DO DATE
-        formEditDoDate.Value = ws.Range("G" & SrchFB).Value
+        formEditDoDate.Value = Format(ws.Range("G" & SrchFB).Value, "YYYY-MM-DD")
      ' TYPE RID
         formEditRID.Value = ws.Range("H" & SrchFB).Value
      ' RID EXPLN
@@ -2303,12 +2714,14 @@ Dim editStrIQID As String
      ' ACTN COMMENT
         formEditComment.Value = ws.Range("J" & SrchFB).Value
      ' RECEIVING DATE
-        formEditDate.Value = ws.Range("M" & SrchFB).Value
+        formEditDate.Value = Format(ws.Range("N" & SrchFB).Value, "YYYY-MM-DD") ' UPDATED TO ACCOMODATE EMAIL
      ' NID APPEND
         formEditNID.Value = ws.Range("K" & SrchFB).Value
      ' SSID APPEND
         If ws.Range("L" & SrchFB).Value <> "" Then formEditSSID.Value = Format(ws.Range("L" & SrchFB).Value, "000000000")
         If ws.Range("L" & SrchFB).Value = "" Or ws.Range("L" & SrchFB).Value = 0 Then formEditSSID.Value = ""
+     ' EMAIL APPEND
+        formEditContactInfo.Value = ws.Range("M" & SrchFB).Value
 End Sub
 
 Sub editCtrlSrcRemoval() ' data protection
@@ -2321,6 +2734,7 @@ Sub editCtrlSrcRemoval() ' data protection
     formEditRID.ControlSource = ""
     formEditNID.ControlSource = ""
     formEditSSID.ControlSource = ""
+    formEditContactInfo.ControlSource = ""
     
     formEditID.Value = ""
     formEditSID.Value = ""
@@ -2332,10 +2746,27 @@ Sub editCtrlSrcRemoval() ' data protection
     formEditRowDisp.Value = ""
     formEditNID.Value = ""
     formEditSSID.Value = ""
+    formEditContactInfo.Value = ""
     Call editBoxDisable
 End Sub
 
-Sub formRemoveSingleEntry()
+Sub editCtrlArchiveShield()  ' prevent archive when on a stage 5 causeing shadow entry
+    formEditRowDisp.Value = ""
+    formEditID.Value = ""
+    formEditSID.Value = ""
+    formEditCycle.Value = ""
+    formEditComment.Value = ""
+    formEditDate.Value = ""
+    formEditDoDate.Value = ""
+    formEditRID.Value = ""
+    formEditRowDisp.Value = ""
+    formEditNID.Value = ""
+    formEditSSID.Value = ""
+    formEditContactInfo.Value = ""
+    Call editBoxDisable
+End Sub
+
+Sub formRemoveSingleEntry() ' REMOVE A ROW
 Dim Crow As Long
     Crow = formEditRowDisp.Value
     Range("C" & Crow).Value = ""
@@ -2343,7 +2774,7 @@ Dim Crow As Long
     Range("F" & Crow).Value = ""
     Range("G" & Crow).Value = ""
     Range("H" & Crow).Value = ""
-    Range("J" & Crow & ":M" & Crow).Value = ""
+    Range("J" & Crow & ":N" & Crow).Value = ""
     formEditID.ControlSource = ""
     formEditSID.ControlSource = ""
     formEditCycle.ControlSource = ""
@@ -2353,6 +2784,7 @@ Dim Crow As Long
     formEditRID.ControlSource = ""
     formEditNID.ControlSource = ""
     formEditSSID.ControlSource = ""
+    formEditContactInfo.ControlSource = ""
 End Sub
 
 Sub RIDexExplain() ' Append RID explain box display update - OP 220511
@@ -2484,10 +2916,10 @@ Sub deleteEntry()
         Range("K" & Mfloater.Row).Value = Nvoid
         Range("L" & Mfloater.Row).Value = Nvoid
         Range("M" & Mfloater.Row).Value = Nvoid
-        'Range("N" & Mfloater.Row).Value = Nvoid
+        Range("N" & Mfloater.Row).Value = Nvoid ' RE-ENGAGED
 End Sub
 
-Sub editBoxValidate()
+Sub editBoxValidate() ' to engage and disengage fields determined based on search result
 If formEditIQID.Value = "" Or searchEdit = True Then
     formEditID.Enabled = False
     formEditSIDadjust.Enabled = False
@@ -2499,6 +2931,7 @@ If formEditIQID.Value = "" Or searchEdit = True Then
     formEditComment.Enabled = False
     formEditNID.Enabled = False
     formEditSSID.Enabled = False
+    formEditContactInfo.Enabled = False
 ElseIf formEditIQID.Value <> "" And searchEdit = False Then
     formEditID.Enabled = True
     formEditSIDadjust.Enabled = True
@@ -2510,6 +2943,7 @@ ElseIf formEditIQID.Value <> "" And searchEdit = False Then
     formEditComment.Enabled = True
     formEditNID.Enabled = True
     formEditSSID.Enabled = True
+    formEditContactInfo.Enabled = True
 End If
 End Sub
 
@@ -2524,6 +2958,7 @@ Sub editBoxDisable()
     formEditComment.Enabled = False
     formEditNID.Enabled = False
     formEditSSID.Enabled = False
+    formEditContactInfo.Enabled = False
 End Sub
 
 Sub resetLog()
@@ -2547,11 +2982,162 @@ With ws
     .Range("J" & RLC).Value = formEditComment.Value
     .Range("K" & RLC).Value = formEditNID.Value
     .Range("L" & RLC).Value = formEditSSID.Value
-    .Range("M" & RLC).Value = formEditDate.Value
+    .Range("M" & RLC).Value = formEditContactInfo.Value ' EMAIL
+    .Range("N" & RLC).Value = formEditDate.Value
 End With
 
 End Sub
+
+Sub portToM114() ' A procedure to port NAME, SSN and ACTION to legacy 114
+On Error GoTo resumeThis ' DO NOT ACT IF NOTHING
+
+Dim aSSN As String, aNmn As String  ' establish actions
+Dim legacy114 As Workbook
+    Set legacy114 = Workbooks(config.Range("B8").Value)  ' using link data
+Dim wSSN As Range, wNmn As Range
+    Set wSSN = legacy114.Sheets("Master DD114").Range("C3")
+    Set wNmn = legacy114.Sheets("Master DD114").Range("C2")
+Application.ScreenUpdating = False
+If formEditSSID.Value = "" Or formEditNID.Value = "" Then GoTo resumeThis
+    wSSN.Value = formEditSSID.Text
+    wNmn.Value = formEditNID.Text
+
+resumeThis:
+Application.ScreenUpdating = True
+End Sub
+
+Sub contactPerson() ' EDIT PANEL CONTACTING INFO
+
+' establish data
+Dim olApp As Outlook.Application
+Dim olMail As Outlook.MailItem
+Dim thisTime As String
+    Dim CTM As String: CTM = Format(Now, "hhmm")
+    Dim ITM As Long: ITM = Int(CTM)
+    Select Case ITM
+    Case 0 To 1159
+        thisTime = "Morning"
+    Case 1200 To 1659
+        thisTime = "Afternoon"
+    Case 1700 To 2359
+        thisTime = "Evening"
+    End Select
+    
+Dim mailData As String, mailDataCut As Long
+    mailDataCut = InStr(1, formEditComment.Text, vbCrLf)
+    mailData = Left(formEditComment, mailDataCut)
+    
+Dim mailBody As String: mailBody = dataContactEmail.Mail.Text
+    mailBody = Replace(mailBody, "CURR_TIME", thisTime) ' FIX TIME
+    mailBody = Replace(mailBody, "<LATEST_LINE>", mailData) ' FIX ACTUAL INFO
+Dim mailSubject As String: mailSubject = "Unsupervised Case Update"
+Dim mailCC As String: mailCC = "lr.finance.helpdesk@us.af.mil"
+Dim mailTo As String
+If InStr(1, formEditContactInfo.Text, "|") <> 0 Then
+    mailTo = Left(formEditContactInfo.Text, _
+             InStr(1, formEditContactInfo.Text, "|") - 1)
+Else
+    mailTo = formEditContactInfo.Text
+End If
+
+If Len(formEditContactInfo.Text) <> InStr(1, formEditContactInfo.Text, "|") And _
+   InStr(1, formEditContactInfo.Text, "|") <> 0 Then
+    Dim mailTitle As String ' WE HAVE TITLE
+    mailTitle = Right(formEditContactInfo.Text, _
+        Len(formEditContactInfo.Text) - InStr(1, formEditContactInfo.Text, "|"))
+    mailBody = Replace(mailBody, "<PERSON>", mailTitle & " " & formEditNID.Text)
+Else ' WE HAVE NO TITLE
+    mailBody = Replace(mailBody, "<PERSON>", "Mr./Ms. " & formEditNID.Text) ' FIX NAME
+End If
+
+' Build Email
+Set olApp = New Outlook.Application
+Set olMail = olApp.CreateItem(olMailItem)
+
+With olMail
+    .SentOnBehalfOfName = "lr.finance.helpdesk@us.af.mil"
+    .BodyFormat = olFormatPlain
+    .Display
+    .To = mailTo
+    .cC = mailCC
+    .Subject = mailSubject
+    .Body = mailBody
+End With
+
+debugNotice = debugHH & "[User]: Sent mail data: " & mailData & " to address: " & mailTo
+
+Call postActionSeries
+
+
+End Sub
+Sub contactFMWFrejc() ' EDIT PANEL CONTACTING INFO
+
+' establish data
+Dim olApp As Outlook.Application
+Dim olMail As Outlook.MailItem
+Dim thisTime As String
+    Dim CTM As String: CTM = Format(Now, "hhmm")
+    Dim ITM As Long: ITM = Int(CTM)
+    Select Case ITM
+    Case 0 To 1159
+        thisTime = "Morning"
+    Case 1200 To 1659
+        thisTime = "Afternoon"
+    Case 1700 To 2359
+        thisTime = "Evening"
+    End Select
+    
+Dim mailData As String, mailDataCut As Long
+    mailDataCut = InStr(1, formEditComment.Text, vbCrLf)
+    mailData = "SSID- " & formEditSSID.Text & Left(formEditComment, mailDataCut)
+    
+Dim mailBody As String: mailBody = dataFMWFrejcEmail.Mail.Text
+    mailBody = Replace(mailBody, "CURR_TIME", thisTime) ' FIX TIME
+    mailBody = Replace(mailBody, "<LATEST_LINE>", mailData) ' FIX ACTUAL INFO
+Dim mailSubject As String: mailSubject = "(CUI) Unsupervised FMWF Reject Notice"
+Dim mailCC As String: mailCC = "lr.finance.helpdesk@us.af.mil"
+Dim mailTo As String
+If InStr(1, formEditContactInfo.Text, "|") <> 0 Then
+    mailTo = Left(formEditContactInfo.Text, _
+             InStr(1, formEditContactInfo.Text, "|") - 1)
+Else
+    mailTo = formEditContactInfo.Text
+End If
+
+If Len(formEditContactInfo.Text) <> InStr(1, formEditContactInfo.Text, "|") And _
+   InStr(1, formEditContactInfo.Text, "|") <> 0 Then
+    Dim mailTitle As String ' WE HAVE TITLE
+    mailTitle = Right(formEditContactInfo.Text, _
+        Len(formEditContactInfo.Text) - InStr(1, formEditContactInfo.Text, "|"))
+    mailBody = Replace(mailBody, "<PERSON>", mailTitle & " " & formEditNID.Text)
+Else ' WE HAVE NO TITLE
+    mailBody = Replace(mailBody, "<PERSON>", "Technician " & formEditNID.Text) ' FIX NAME
+End If
+
+' Build Email
+Set olApp = New Outlook.Application
+Set olMail = olApp.CreateItem(olMailItem)
+
+With olMail
+    .SentOnBehalfOfName = "lr.finance.helpdesk@us.af.mil"
+    .BodyFormat = olFormatPlain
+    .Display
+    .To = mailTo
+    .cC = mailCC
+    .Subject = mailSubject
+    .Body = mailBody
+    .Importance = olImportanceHigh
+End With
+
+debugNotice = debugHH & "[User]: Sent mail data: " & mailData & " to address: " & mailTo
+
+Call postActionSeries
+
+
+End Sub
+
 Sub codingConfigInitialize() ' WHAT IS THIS FOR?
 
 End Sub
+
 

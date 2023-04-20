@@ -453,11 +453,15 @@ Set saveToPrompt = Nothing ' UNLOAD OBJECT >>Does not save any way ?
 If Not dsPrintOptn Or saveTo = "" Then Cpath = saveTo  ' only wrote when fixed path is not activated
 
 ' add a Mkdir, or make directory for when under constant method
-If prntIt = "DEPLOY" Then
+If prntIt = "DEPLOY" Then ' need to display the sheet to do it
+    Application.ScreenUpdating = False
+    pCard.Visible = xlSheetVisible
     pCard.ExportAsFixedFormat xlTypePDF, _
         Filename:=Cpath & "\deployScantron." & Format(Now(), "YYMMDD-HHMMSS")
     Application.StatusBar = "The Scantron has been exported to " & Cpath
     Exit Sub
+    pCard.Visible = xlSheetHidden
+    Application.ScreenUpdating = True
 Else 'if
 End If
 
@@ -564,7 +568,7 @@ End Sub
 
 
 Sub readScantron() ' direct 114 to read scantron' Dep Scantron
-Dim rq As String: rq = MsgBox("Ensure your Master 114 is operating!", vbOKCancel, "Sensei Scantron Operation Warning")
+Dim rq As String: rq = MsgBox("Ensure the Legacy 114 is operating!", vbOKCancel, "Sensei Scantron Operation Warning")
     If rq = vbCancel Then Exit Sub
 Dim aTrans As String, aSSN As String, aNmn As String, aDate As String
 Dim c As Long, lc As Long: lc = 0 ' for iteration purposes

@@ -15,8 +15,10 @@ Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 Private Sub apCOPY_Click()
 SetClipboard (apLicense.Text)
+globalSave
 End Sub
 
 Private Sub apOK_Click()
 licenseAGPL.Hide
+globalSave
 End Sub
