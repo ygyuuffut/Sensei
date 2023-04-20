@@ -1,6 +1,6 @@
 # SENSEI - A Clustered Applets for Excel
 ![License](https://img.shields.io/badge/License-AGPL%203-BB8FCE?style=flat-square)
-![Version](https://img.shields.io/badge/Version-1.6.0-76D754?style=flat-square)
+![Version](https://img.shields.io/badge/Version-1.7.0-76D754?style=flat-square)
 ![Version Type](https://img.shields.io/badge/Type-Release--01-16A085?style=flat-square)
 ![Language](https://img.shields.io/badge/Language-Virtual%20Basic-EB984E?style=flat-square)
 ![Size](https://img.shields.io/github/languages/code-size/ygyuuffut/Sensei?style=flat-square)
@@ -20,6 +20,7 @@ A very much scatter-mind driven programming that develops as demands emerges
 		- [Sensei Link - Document Network](#sensei-link---document-network-)
 		- [Sensei FD - Form Distiller](#sensei-fd---form-distiller-)
 		- [Sensei DS - Deployee Scantron](#sensei-ds---deployee-scantron-)
+		- [Sensei REJC - Rejection Report](#sensei-rejc---reject-report-cl)
 		- [Sensei CL - Common Library](#sensei-cl---common-library-)
 		- [Sensei CE - Coding Engine](#sensei-ce---coding-engine-)
 
@@ -53,7 +54,53 @@ There are two methods which this could be setup and become operational on any Wi
 
 ## Update History
 
-### Sensei Main  ![UI](https://img.shields.io/badge/1.6.0-Release-76D754)
+### Sensei Main  ![UI](https://img.shields.io/badge/1.7.0-Release-76D754)
+
+<details><summary>SENSEI 1.7 - Reporter</summary>
+<p>
+
+![](https://img.shields.io/badge/1.7.0-424949?style=flat-square)
+- Added Clarification to Country lookup
+- Added 2424 JPBB Input Field for Console Input
+- Added Legacy 114 Port Option 'Soon to Remove'
+- Fixed Scantron not printing correctly
+- Fixed Incomplete Deletion (need to verify)
+- Fixed Leakage when editing after resort
+- Fixed Errorneous Erase after resort
+- Fixed Shadow entry when archiving while stage 5 entry is in display
+- Patch Leakeage on Append Page sort
+- Patch Record Page Entry Miccounting
+- Patch AutoScroll infinite loop on MISC entries
+- Patch Inadequate Update in Form 110 Indicator
+- Modified Record Page percentage display method
+- Modified Layout in Edit pane
+- Modified New Entry Appending information
+- Accessibility Updates
+- The Email Contacting with Logging
+- Font Obtainer
+- Updated User Agreement
+- Alternative Method to copy SSN
+- Added Auto Logging for today's date in description
+- Amended function for travel in edit tab - Auto "Profile"
+- Application title modification function
+- Isolated Export on REJC
+- Experiment Entry Flagging
+- Improved readability on Amending Description Box
+- Display Clarity improvements on form display
+- Fixed inaccurate date format in Form 110
+- EXPANDED Capacity to 500
+- Fixed Notification Leak
+- Complete 117 Runner
+- Imporved readibility on Amending Description Box
+- Display Clearity improvements on form display
+- Fixed inaccurate date format in Form 110
+- EXPANDED Capacity to 500
+- Fixed Notification Leak
+- Integrate Rejection Report
+
+
+</p>
+</details>
 
 <details><summary>SENSEI 1.6 - Historian</summary>
 <p>
@@ -188,6 +235,20 @@ There are two methods which this could be setup and become operational on any Wi
 ![](https://img.shields.io/badge/1.0.0-424949?style=flat-square)
 - SENSEI Deployee Scantron Introduction
 - Full iteration and Data recognition Logic
+
+</p>
+</details>
+
+
+### Sensei REJC - Reject Report ![CL](https://img.shields.io/badge/1.1.0-Release-76D754)
+<details><summary>REJC 1.0 - Data Handler</summary>
+<p>
+
+![](https://img.shields.io/badge/1.1.0-424949?style=flat-square)
+- Improved Stability while generating HTML based email and web report
+
+![](https://img.shields.io/badge/1.0.0-424949?style=flat-square)
+- SENSEI Rejection Report Introduction
 
 </p>
 </details>
