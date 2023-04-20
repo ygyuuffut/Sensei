@@ -20,7 +20,7 @@ A very much scatter-mind driven programming that develops as demands emerges
 		- [Sensei Link - Document Network](#sensei-link---document-network-)
 		- [Sensei FD - Form Distiller](#sensei-fd---form-distiller-)
 		- [Sensei DS - Deployee Scantron](#sensei-ds---deployee-scantron-)
-		- [Sensei REJC - Rejection Report](#sensei-rejc---reject-report-cl)
+		- [Sensei REJC - Rejection Report](#sensei-rejc---reject-report-)
 		- [Sensei CL - Common Library](#sensei-cl---common-library-)
 		- [Sensei CE - Coding Engine](#sensei-ce---coding-engine-)
 
