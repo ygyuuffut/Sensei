@@ -4,10 +4,10 @@ Option Explicit
 ' Worksheet and Range Declarations
 ' #################################
 ' ==============Workbook=================
-Public Sensei As Workbook
+Public sensei As Workbook
 
 ' =============Worksheets================
-Public tCSP As Worksheet, aCSP As Worksheet
+Public tCSP As Worksheet, acsp As Worksheet
 Public f110a As Worksheet, f110b As Worksheet
 Public sConfig As Worksheet, sData As Worksheet
 
@@ -17,14 +17,14 @@ Public cspIQ As Range
 
 Sub RepairRef() ' Repairing Reference Library
 ' Workbook
-    Set Sensei = ThisWorkbook
+    Set sensei = ThisWorkbook
 'Worksheets
-    Set tCSP = Sensei.Worksheets("CSP.TR")
-    Set aCSP = Sensei.Worksheets("CSP.ACH")
-    Set f110a = Sensei.Worksheets("DEBT.A")
-    Set f110b = Sensei.Worksheets("DEBT.B")
-    Set sConfig = Sensei.Worksheets("SENSEI.CONFIG")
-    Set sData = Sensei.Worksheets("SENSEI.DATA")
+    Set tCSP = sensei.Worksheets("CSP.TR")
+    Set acsp = sensei.Worksheets("CSP.ACH")
+    Set f110a = sensei.Worksheets("DEBT.A")
+    Set f110b = sensei.Worksheets("DEBT.B")
+    Set sConfig = sensei.Worksheets("SENSEI.CONFIG")
+    Set sData = sensei.Worksheets("SENSEI.DATA")
 'Range
     Set cspIQ = Range("entryTable[ID]")
 End Sub
@@ -60,3 +60,4 @@ With tCSP
 End With
 Application.ScreenUpdating = True
 End Sub
+
